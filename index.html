@@ -1,0 +1,1759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Air AQ continuously monitors the air around you, detects abnormal air-quality conditions, and uses AI to help you understand what is happening.">
+    <title>Air AQ — Know the Air You Breathe</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- smooth scroll. Deferred and ahead of script.js, so the page still
+         parses and paints without waiting on it, and script.js finds it. -->
+    <script src="https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.min.js" defer></script>
+    <script src="script.js" defer></script>
+    <script>
+        /* the overlay only exists when JS can take it away again */
+        document.documentElement.classList.add('pre-on');
+
+        (function () {
+            var left = false;
+
+            /* A reload always starts at the hero. The browser's own scroll
+               restore would otherwise put the page back where it was left,
+               behind the cover, and a stale #section in the address bar
+               would anchor-jump on top of that — so both are dropped here,
+               before the first paint. */
+            try { history.scrollRestoration = 'manual'; } catch (e) {}
+            if (location.hash) {
+                history.replaceState(null, '', location.pathname + location.search);
+            }
+
+            function toTop() {
+                window.scrollTo(0, 0);
+            }
+            toTop();
+            /* the restore can land after parsing, so the top is re-asserted
+               once more when the page finishes loading */
+            window.addEventListener('load', toTop);
+
+            /* the one way out: unlock the page, let the cover fade on its
+               own transition, and only then take the node out */
+            function leave() {
+                if (left) return;
+                left = true;
+
+                var pre = document.getElementById('preloader');
+                toTop();
+                document.documentElement.classList.remove('pre-on');
+                if (document.body) document.body.classList.add('is-loaded');
+                if (!pre) return;
+
+                /* .is-out keeps the overlay displayed while it fades, so
+                   dropping .pre-on above cannot cut the transition short */
+                pre.classList.add('is-out');
+
+                var dropped = false;
+                function drop() {
+                    if (dropped) return;
+                    dropped = true;
+                    if (pre.parentNode) pre.parentNode.removeChild(pre);
+                }
+                /* transitionend bubbles, so only the overlay's own fade
+                   should be allowed to end it */
+                pre.addEventListener('transitionend', function (e) {
+                    if (e.target === pre) drop();
+                });
+                setTimeout(drop, 900);   /* in case the transition never fires */
+            }
+
+            /* script.js owns the exit and is done well inside this; the
+               timer is only here so a script that never arrives cannot
+               leave anyone stranded on the cover */
+            setTimeout(leave, 3600);
+        }());
+    </script>
+</head>
+<body>
+
+<!-- ═══ PRELOADER ═══════════════════════════════════════════════════════
+     Paints before anything else, holds for a beat while the page settles,
+     then fades out to leave the hero already standing behind it. -->
+<div class="pre" id="preloader" role="status" aria-label="Loading Air AQ">
+
+    <!-- air being drawn in: five soft motes drifting toward the mark -->
+    <div class="pre__air" aria-hidden="true">
+        <span class="pre__mote" style="--x:-190px; --y:-104px; --s:5px;  --t:5.4s; --d:-0.4s"></span>
+        <span class="pre__mote" style="--x: 168px; --y:-140px; --s:3.5px;--t:6.2s; --d:-2.1s"></span>
+        <span class="pre__mote" style="--x: 214px; --y:  72px; --s:6px;  --t:5.8s; --d:-3.4s"></span>
+        <span class="pre__mote" style="--x:-146px; --y: 132px; --s:4px;  --t:6.6s; --d:-1.2s"></span>
+        <span class="pre__mote" style="--x:  22px; --y:-176px; --s:3px;  --t:6.0s; --d:-4.5s"></span>
+    </div>
+
+    <div class="pre__core">
+        <span class="pre__mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" fill="none">
+                <circle cx="16" cy="16" r="15" stroke="currentColor" stroke-opacity=".35"/>
+                <path d="M6 13.5h11a3.5 3.5 0 1 0-3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                <path d="M6 19h14a3.5 3.5 0 1 1-3.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+        </span>
+        <span class="pre__name">Air<span>AQ</span></span>
+    </div>
+
+    <div class="pre__bar" aria-hidden="true"><i class="pre__fill"></i></div>
+</div>
+
+<!-- ═══ THE HERO, AND THE READINGS THAT CLOSE IT ════════════════════════
+     One surface, divided into two boxes only because the hero's floating
+     readings are placed in percentages of the room they orbit — so the room
+     keeps a box of its own, and the counters take the rest of the same
+     screen. The stack owns the colour for both of them and neither paints an
+     edge, so there is nothing at the join but Deep Air Blue meeting itself.
+     ═══════════════════════════════════════════════════════════════════════ -->
+<div class="herostack">
+
+<div class="hero">
+
+    <!-- the room -->
+    <div class="room has-photo" aria-hidden="true">
+        <!-- Two shots of the same room, one per shape of hero.
+
+             The wide file is 1672x941; the hero keeps its two-column desktop
+             layout down to 1200px and is about that shape, so it fits. Below
+             1200px the hero stacks into a single tall column, and covering a
+             tall box with a 16:9 photograph throws most of the frame away —
+             so the portrait file (1024x1536) takes over at exactly the width
+             the layout changes, and the crop stays a crop rather than a
+             detail. The browser picks one and downloads only that one. -->
+        <picture>
+            <source media="(max-width: 1200px)" srcset="assets/image/bgrespons.png"
+                    width="1024" height="1536">
+            <img class="room__photo" src="assets/image/baground.png" alt=""
+                 width="1672" height="941" fetchpriority="high" decoding="async"
+                 onerror="this.closest('.room').classList.remove('has-photo'); this.remove();">
+        </picture>
+        <div class="room__grade"></div>
+        <div class="room__wall"></div>
+        <div class="room__window"></div>
+        <div class="room__frame"></div>
+
+        <svg class="room__rays" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" fill="none">
+            <defs>
+                <linearGradient id="rayFade" x1=".5" y1="0" x2=".2" y2="1">
+                    <stop offset="0%"   stop-color="#FFFFFF" stop-opacity=".26"/>
+                    <stop offset="55%"  stop-color="#D6EBF3" stop-opacity=".10"/>
+                    <stop offset="100%" stop-color="#B9D9E1" stop-opacity="0"/>
+                </linearGradient>
+            </defs>
+            <path d="M980 90 1210 120 700 900 380 900Z" fill="url(#rayFade)"/>
+            <path d="M1120 70 1290 96 980 900 760 900Z" fill="url(#rayFade)" opacity=".7"/>
+            <path d="M900 110 1010 120 520 900 330 900Z" fill="url(#rayFade)" opacity=".45"/>
+        </svg>
+
+        <div class="room__plant"></div>
+        <div class="room__plant room__plant--b"></div>
+        <div class="room__plant room__plant--c"></div>
+
+        <svg class="room__air" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" fill="none">
+            <defs>
+                <linearGradient id="airFade" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%"   stop-color="#B9D9E1" stop-opacity="0"/>
+                    <stop offset="20%"  stop-color="#D6EBF3" stop-opacity=".7"/>
+                    <stop offset="55%"  stop-color="#FFFFFF" stop-opacity=".85"/>
+                    <stop offset="85%"  stop-color="#B9D9E1" stop-opacity=".6"/>
+                    <stop offset="100%" stop-color="#629BB5" stop-opacity="0"/>
+                </linearGradient>
+                <filter id="airGlow" x="-10%" y="-60%" width="120%" height="220%">
+                    <feGaussianBlur stdDeviation="9"/>
+                </filter>
+            </defs>
+            <g filter="url(#airGlow)" opacity=".55" stroke="url(#airFade)" stroke-linecap="round">
+                <path class="ribbon ribbon--1" d="M300 470c180-120 420-70 620 20s360 60 500-60" stroke-width="9"/>
+                <path class="ribbon ribbon--3" d="M240 640c220 60 460-30 700-40s340 70 480 10" stroke-width="8"/>
+            </g>
+            <g stroke="url(#airFade)" stroke-linecap="round">
+                <path class="ribbon ribbon--1" d="M300 470c180-120 420-70 620 20s360 60 500-60"  stroke-width="2.2"/>
+                <path class="ribbon ribbon--2" d="M180 560c220-70 400 50 640 40s400-110 620-60"  stroke-width="1.7"/>
+                <path class="ribbon ribbon--3" d="M240 640c220 60 460-30 700-40s340 70 480 10"   stroke-width="2"/>
+                <path class="ribbon ribbon--4" d="M340 380c200-40 380 60 600 30s360-90 560-40"   stroke-width="1.4"/>
+            </g>
+        </svg>
+
+        <svg class="room__dust" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" fill="#D6EBF3">
+            <circle class="speck s1" cx="380" cy="300" r="2.4"/>
+            <circle class="speck s2" cx="620" cy="200" r="1.8"/>
+            <circle class="speck s3" cx="880" cy="360" r="2.2"/>
+            <circle class="speck s4" cx="1080" cy="250" r="1.6"/>
+            <circle class="speck s5" cx="1240" cy="430" r="2"/>
+            <circle class="speck s6" cx="520" cy="520" r="1.7"/>
+            <circle class="speck s7" cx="960" cy="600" r="2.3"/>
+            <circle class="speck s8" cx="1180" cy="680" r="1.5"/>
+            <circle class="speck s2" cx="720" cy="740" r="1.9"/>
+            <circle class="speck s5" cx="300" cy="700" r="1.6"/>
+        </svg>
+
+        <div class="room__floor"></div>
+        <div class="room__scrim"></div>
+        <div class="room__grain"></div>
+        <div class="room__vignette"></div>
+    </div>
+
+    <!-- floating navigation -->
+    <header class="nav">
+        <div class="nav__bar">
+            <a class="brand" href="#">
+                <span class="brand__mark" aria-hidden="true">
+                    <svg viewBox="0 0 32 32" fill="none">
+                        <circle cx="16" cy="16" r="15" stroke="currentColor" stroke-opacity=".45"/>
+                        <path d="M6 13.5h11a3.5 3.5 0 1 0-3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        <path d="M6 19h14a3.5 3.5 0 1 1-3.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <span class="brand__name">Air<span>AQ</span></span>
+            </a>
+
+            <nav class="nav__links" id="nav-menu" aria-label="Primary">
+                <a href="#">Product</a>
+                <a href="#">Technology</a>
+                <a href="#">Air Science</a>
+                <a href="#">Support</a>
+            </nav>
+
+            <a class="nav__cta" href="#">Get Air AQ</a>
+
+            <!-- the small-screen way into the same four links. Hidden on the
+                 wide layout, where the links are already in the bar. -->
+            <button class="nav__toggle" id="nav-toggle" type="button"
+                    aria-expanded="false" aria-controls="nav-menu" aria-label="Open menu">
+                <span class="nav__burger" aria-hidden="true"></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- hero composition -->
+    <main class="hero__inner">
+
+        <div class="hero__copy">
+            <h1 class="hero__title">
+                Know the Air You&nbsp;Breathe.
+                <span class="hero__title-accent">Protect What Matters.</span>
+            </h1>
+
+            <p class="hero__desc">
+                Air AQ continuously monitors the air around you, detects abnormal
+                air-quality conditions, and uses AI to help you understand what is
+                happening—so you can take action when it matters.
+            </p>
+
+            <div class="hero__actions">
+                <a class="btn btn--primary" href="#">
+                    Discover Air AQ
+                    <svg class="btn__arrow" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <path d="M4 10h11m0 0-4.2-4.2M15 10l-4.2 4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </a>
+                <a class="btn btn--ghost" href="#">
+                    <svg class="btn__play" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-opacity=".55"/>
+                        <path d="M8.4 7.3 13 10l-4.6 2.7V7.3Z" fill="currentColor"/>
+                    </svg>
+                    How It Works
+                </a>
+            </div>
+        </div>
+
+        <div class="hero__stage">
+            <div class="stage">
+
+                <!-- floating glass cards, layered at different depths -->
+                <article class="fcard fcard--aq is-near">
+                    <span class="fcard__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M3 10h10a3 3 0 1 0-3-3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                            <path d="M3 15h13a3 3 0 1 1-3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                        </svg>
+                    </span>
+                    <span class="fcard__text">
+                        <span class="fcard__label">Air Quality</span>
+                        <span class="fcard__value">Good</span>
+                    </span>
+                    <svg class="fcard__spark" viewBox="0 0 64 24" fill="none" aria-hidden="true">
+                        <path d="M2 16 12 11 22 14 32 7 42 12 52 6 62 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </article>
+
+                <article class="fcard fcard--co2 is-mid">
+                    <span class="fcard__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <circle cx="8" cy="12" r="4.2" stroke="currentColor" stroke-width="1.6"/>
+                            <circle cx="17" cy="12" r="3.2" stroke="currentColor" stroke-width="1.6"/>
+                        </svg>
+                    </span>
+                    <span class="fcard__text">
+                        <span class="fcard__label">CO₂</span>
+                        <span class="fcard__value">Normal</span>
+                    </span>
+                    <span class="fcard__dot" aria-hidden="true"></span>
+                </article>
+
+                <article class="fcard fcard--pm is-mid">
+                    <span class="fcard__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <circle cx="7" cy="8" r="1.6" fill="currentColor"/>
+                            <circle cx="14" cy="6.5" r="1.1" fill="currentColor"/>
+                            <circle cx="17.5" cy="12" r="1.6" fill="currentColor"/>
+                            <circle cx="10" cy="14" r="1.2" fill="currentColor"/>
+                            <circle cx="6.5" cy="17.5" r="1.1" fill="currentColor"/>
+                            <circle cx="15" cy="18" r="1.4" fill="currentColor"/>
+                        </svg>
+                    </span>
+                    <span class="fcard__text">
+                        <span class="fcard__label">PM2.5</span>
+                        <span class="fcard__value">Low</span>
+                    </span>
+                    <span class="meter" aria-hidden="true">
+                        <i class="is-on"></i><i class="is-on"></i><i></i><i></i><i></i>
+                    </span>
+                </article>
+
+                <article class="fcard fcard--voc is-far">
+                    <span class="fcard__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M12 4c2.6 2.6 4 4.9 4 7a4 4 0 1 1-8 0c0-2.1 1.4-4.4 4-7Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                            <path d="M6.5 18.5h11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                        </svg>
+                    </span>
+                    <span class="fcard__text">
+                        <span class="fcard__label">VOC</span>
+                        <span class="fcard__value">0.3</span>
+                    </span>
+                </article>
+
+                <article class="fcard fcard--gas is-near">
+                    <span class="fcard__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M12 3.5c3.4 3.2 5.6 6 5.6 8.9A5.6 5.6 0 0 1 12 18a5.6 5.6 0 0 1-5.6-5.6c0-2.9 2.2-5.7 5.6-8.9Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                            <path d="M9.6 13.4a2.5 2.5 0 0 0 2.4 2.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                        </svg>
+                    </span>
+                    <span class="fcard__text">
+                        <span class="fcard__label">Gas</span>
+                        <span class="fcard__value">Safe</span>
+                    </span>
+                    <span class="fcard__dot" aria-hidden="true"></span>
+                </article>
+
+                <article class="fcard fcard--temp is-mid">
+                    <span class="fcard__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M10 13.6V6a2 2 0 1 1 4 0v7.6a4 4 0 1 1-4 0Z" stroke="currentColor" stroke-width="1.6"/>
+                            <circle cx="12" cy="16.6" r="1.6" fill="currentColor"/>
+                        </svg>
+                    </span>
+                    <span class="fcard__text">
+                        <span class="fcard__label">Temperature</span>
+                        <span class="fcard__value">24°C</span>
+                    </span>
+                </article>
+
+            </div>
+        </div>
+    </main>
+</div>
+
+</div><!-- /.herostack -->
+
+<!-- ══ THE READINGS ══════════════════════════════════════════════════════════
+     Its own section, directly below the hero. It opens on the same Deep Air
+     Blue the hero dissolves into, so the two meet on one tone with nothing
+     overlapping the hero.
+     ═══════════════════════════════════════════════════════════════════════ -->
+<section class="airdata" id="air-data" aria-label="Air AQ live data">
+
+    <!-- the air itself: three very soft, slow currents and a drift of motes.
+         All of it is gradient and transform work — no blur filters, nothing
+         that would cost a frame while the page is scrolling. -->
+    <div class="airdata__field" aria-hidden="true">
+        <span class="airwave airwave--a"></span>
+        <span class="airwave airwave--b"></span>
+        <span class="airwave airwave--c"></span>
+
+        <div class="airdata__motes">
+            <span class="mote" style="--x:6%;  --y:74%; --sz:3px;   --o:.34; --dx:26px;  --dy:-92px;  --dur:26s; --delay:-3s"></span>
+            <span class="mote" style="--x:13%; --y:28%; --sz:2px;   --o:.26; --dx:-18px; --dy:-70px;  --dur:31s; --delay:-11s"></span>
+            <span class="mote" style="--x:21%; --y:88%; --sz:2.5px; --o:.3;  --dx:14px;  --dy:-118px; --dur:34s; --delay:-19s"></span>
+            <span class="mote" style="--x:28%; --y:16%; --sz:2px;   --o:.2;  --dx:22px;  --dy:-58px;  --dur:29s; --delay:-6s"></span>
+            <span class="mote" style="--x:35%; --y:66%; --sz:3px;   --o:.36; --dx:-24px; --dy:-84px;  --dur:24s; --delay:-15s"></span>
+            <span class="mote" style="--x:43%; --y:34%; --sz:2px;   --o:.24; --dx:18px;  --dy:-66px;  --dur:33s; --delay:-2s"></span>
+            <span class="mote" style="--x:51%; --y:82%; --sz:2.5px; --o:.32; --dx:-14px; --dy:-104px; --dur:28s; --delay:-22s"></span>
+            <span class="mote" style="--x:58%; --y:22%; --sz:2px;   --o:.22; --dx:26px;  --dy:-62px;  --dur:36s; --delay:-9s"></span>
+            <span class="mote" style="--x:66%; --y:70%; --sz:3px;   --o:.3;  --dx:-20px; --dy:-88px;  --dur:27s; --delay:-17s"></span>
+            <span class="mote" style="--x:73%; --y:38%; --sz:2px;   --o:.26; --dx:16px;  --dy:-74px;  --dur:32s; --delay:-4s"></span>
+            <span class="mote" style="--x:81%; --y:86%; --sz:2.5px; --o:.34; --dx:-22px; --dy:-110px; --dur:25s; --delay:-13s"></span>
+            <span class="mote" style="--x:88%; --y:30%; --sz:2px;   --o:.2;  --dx:20px;  --dy:-56px;  --dur:30s; --delay:-20s"></span>
+            <span class="mote" style="--x:94%; --y:60%; --sz:3px;   --o:.28; --dx:-16px; --dy:-96px;  --dur:35s; --delay:-7s"></span>
+            <span class="mote" style="--x:47%; --y:52%; --sz:2px;   --o:.18; --dx:24px;  --dy:-80px;  --dur:38s; --delay:-26s"></span>
+        </div>
+    </div>
+
+    <div class="airdata__inner">
+        <div class="airdata__row">
+
+            <article class="anode" style="--i:0">
+                <p class="anode__value"><span class="anode__num" data-to="5">5</span></p>
+                <span class="anode__link" aria-hidden="true">
+                    <span class="anode__beam"></span>
+                    <span class="anode__spark"></span>
+                    <span class="anode__stem"></span>
+                    <span class="anode__pin"></span>
+                </span>
+                <p class="anode__label">Smart Sensors</p>
+            </article>
+
+            <article class="anode" style="--i:1">
+                <p class="anode__value"><span class="anode__num" data-to="24" data-suffix="/7">24/7</span></p>
+                <span class="anode__link" aria-hidden="true">
+                    <span class="anode__beam"></span>
+                    <span class="anode__spark"></span>
+                    <span class="anode__stem"></span>
+                    <span class="anode__pin"></span>
+                </span>
+                <p class="anode__label">Continuous Air Monitoring</p>
+            </article>
+
+            <article class="anode" style="--i:2">
+                <p class="anode__value"><span class="anode__num" data-to="5" data-suffix="+">5+</span></p>
+                <span class="anode__link" aria-hidden="true">
+                    <span class="anode__beam"></span>
+                    <span class="anode__spark"></span>
+                    <span class="anode__stem"></span>
+                    <span class="anode__pin"></span>
+                </span>
+                <p class="anode__label">Air Parameters Tracked</p>
+            </article>
+
+            <article class="anode anode--word" style="--i:3">
+                <p class="anode__value"><span class="anode__word">Real-Time</span></p>
+                <span class="anode__link" aria-hidden="true">
+                    <span class="anode__beam"></span>
+                    <span class="anode__spark"></span>
+                    <span class="anode__stem"></span>
+                    <span class="anode__pin"></span>
+                </span>
+                <p class="anode__label">Intelligent Alerts</p>
+            </article>
+
+        </div>
+    </div>
+</section>
+
+
+
+<!-- ══ THE AIR BAND ══════════════════════════════════════════════════════════
+     The readings now close the hero, so this wrapper carries the product
+     alone — and keeps the job it was given: it opens on the exact Deep Air
+     Blue the hero dissolves into, so there is nothing at the join but one
+     colour meeting itself. No rule, no rounding, no margin, no change of
+     width.
+     ═══════════════════════════════════════════════════════════════════════ -->
+<div class="airband">
+<!-- ═══ PRODUCT SECTION ═════════════════════════════════════════════════ -->
+<section class="product" id="product-showcase">
+
+    <div class="product__air" aria-hidden="true">
+        <div class="product__bloom product__bloom--a"></div>
+        <div class="product__bloom product__bloom--b"></div>
+        <div class="product__bloom product__bloom--c"></div>
+    </div>
+
+    <!-- the hero's frame, reused: a centred two-column inner that fills the
+         section, copy on the left and the device stage on the right, with the
+         three-step chain closing underneath. Same shell, same column gap, same
+         paddings and the same stage height as the hero, so the two sections
+         read as one system rather than two different pages. -->
+    <div class="product__inner">
+
+        <header class="phead">
+            <div class="phead__grid">
+                <h2 class="phead__title" data-reveal style="--d:80ms">One Device. A Clearer Understanding of Your&nbsp;Air.</h2>
+                <p class="phead__lead" data-reveal style="--d:160ms">Five sensors in a single unit, read continuously and turned into plain language you can act on.</p>
+            </div>
+            <div class="connect" data-reveal style="--d:400ms">
+                <p class="connect__label">Stay Close, Even When You’re Away</p>
+                <p class="connect__note">Monitor your air and receive important alerts from your phone—even when you're away from the room.</p>
+            </div>
+        </header>
+
+        <!-- the stage: the device with everything it senses floating around it,
+             built and scaled exactly like the hero's stage -->
+        <div class="showcase">
+
+            <div class="showcase__glow" aria-hidden="true"></div>
+            <svg class="showcase__flow" viewBox="0 0 1000 760" preserveAspectRatio="xMidYMid slice" fill="none" aria-hidden="true">
+                <defs>
+                    <linearGradient id="flowP" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stop-color="#B9D9E1" stop-opacity="0"/>
+                        <stop offset="35%" stop-color="#B9D9E1" stop-opacity=".85"/>
+                        <stop offset="70%" stop-color="#629BB5" stop-opacity=".5"/>
+                        <stop offset="100%" stop-color="#447F98" stop-opacity="0"/>
+                    </linearGradient>
+                </defs>
+                <g stroke="url(#flowP)" stroke-linecap="round">
+                    <path class="pflow pflow--1" d="M120 300c150-90 320-40 430 30s250 70 350-30" stroke-width="2"/>
+                    <path class="pflow pflow--2" d="M90 420c180-40 300 60 470 50s250-90 350-40" stroke-width="1.5"/>
+                    <path class="pflow pflow--3" d="M140 560c170 40 320-30 470-40s240 60 300 20" stroke-width="1.8"/>
+                </g>
+            </svg>
+
+            <!-- the device's resting place. An empty, invisible box that holds the
+                 exact geometry the device used to occupy here, so the flight into the
+                 trust story always has a live "home" rect to start from. -->
+            <div class="showcase__slot" aria-hidden="true"></div>
+
+            <div class="showcase__device" data-reveal>
+                <div class="pdevice__shadow" aria-hidden="true"></div>
+
+                <!-- drop a render at assets/image/product.png and add class "has-photo"
+                     to the parent to use it in place of the vector device below -->
+
+                    <svg class="device pdevice" viewBox="0 0 530 525" role="img" aria-label="The Air AQ indoor air-quality monitor">
+                        <defs>
+                            <linearGradient id="pShell" x1=".05" y1="0" x2=".95" y2=".55">
+                                <stop offset="0%" stop-color="#FFFFFF"/>
+                                <stop offset="45%" stop-color="#EDF1F5"/>
+                                <stop offset="100%" stop-color="#C2CBD4"/>
+                            </linearGradient>
+                            <linearGradient id="pTop" x1=".1" y1="1" x2=".85" y2="0">
+                                <stop offset="0%" stop-color="#FFFFFF"/>
+                                <stop offset="60%" stop-color="#F4F7FA"/>
+                                <stop offset="100%" stop-color="#E2E8EE"/>
+                            </linearGradient>
+                            <linearGradient id="pSide" x1="0" y1=".1" x2=".9" y2=".95">
+                                <stop offset="0%" stop-color="#E3E9EF"/>
+                                <stop offset="45%" stop-color="#CDD5DD"/>
+                                <stop offset="100%" stop-color="#AFB9C3"/>
+                            </linearGradient>
+                            <linearGradient id="pFace" x1=".08" y1="0" x2=".92" y2="1">
+                                <stop offset="0%" stop-color="#FFFFFF"/>
+                                <stop offset="52%" stop-color="#F6F9FB"/>
+                                <stop offset="100%" stop-color="#DFE6EC"/>
+                            </linearGradient>
+                            <linearGradient id="pRecess" x1=".12" y1="0" x2=".95" y2=".85">
+                                <stop offset="0%" stop-color="#1D5A93"/>
+                                <stop offset="34%" stop-color="#103C6B"/>
+                                <stop offset="72%" stop-color="#07203C"/>
+                                <stop offset="100%" stop-color="#020C18"/>
+                            </linearGradient>
+                            <linearGradient id="pPanel" x1=".1" y1="0" x2=".9" y2="1">
+                                <stop offset="0%" stop-color="#FFFFFF"/>
+                                <stop offset="55%" stop-color="#F7FAFC"/>
+                                <stop offset="100%" stop-color="#E1E8EF"/>
+                            </linearGradient>
+                            <linearGradient id="pLed" x1="0" y1="0" x2="1" y2="0">
+                                <stop offset="0%" stop-color="#2FA6ED" stop-opacity="0"/>
+                                <stop offset="22%" stop-color="#A9EBFF"/>
+                                <stop offset="52%" stop-color="#DFF7FF"/>
+                                <stop offset="80%" stop-color="#4FC2F7"/>
+                                <stop offset="100%" stop-color="#1E7FC8" stop-opacity="0"/>
+                            </linearGradient>
+                            <linearGradient id="pLedV" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#1E7FC8" stop-opacity="0"/>
+                                <stop offset="30%" stop-color="#3FB4F5"/>
+                                <stop offset="52%" stop-color="#9FE6FF"/>
+                                <stop offset="74%" stop-color="#2E9CE8"/>
+                                <stop offset="100%" stop-color="#1668B0" stop-opacity="0"/>
+                            </linearGradient>
+                            <linearGradient id="pSheen" x1="0" y1="0" x2="1" y2=".3">
+                                <stop offset="0%" stop-color="#FFFFFF" stop-opacity=".85"/>
+                                <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+                            </linearGradient>
+                            <filter id="pCast" x="-40%" y="-25%" width="185%" height="175%">
+                                <feDropShadow dx="0" dy="26" stdDeviation="22" flood-color="#0C2338" flood-opacity=".32"/>
+                            </filter>
+                            <filter id="pPanelSh" x="-35%" y="-30%" width="175%" height="180%">
+                                <feDropShadow dx="7" dy="11" stdDeviation="11" flood-color="#020F1E" flood-opacity=".55"/>
+                            </filter>
+                            <filter id="pBloom" x="-160%" y="-320%" width="420%" height="740%">
+                                <feGaussianBlur stdDeviation="7"/>
+                            </filter>
+                            <filter id="pBloomV" x="-320%" y="-90%" width="740%" height="280%">
+                                <feGaussianBlur stdDeviation="6"/>
+                            </filter>
+                            <filter id="pSoft" x="-60%" y="-70%" width="220%" height="240%">
+                                <feGaussianBlur stdDeviation="9"/>
+                            </filter>
+                            <filter id="pCrease" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="3.2"/></filter>
+                            <clipPath id="pShellClip"><path d="M49 82.6 L101 36.6 A74 74 0 0 1 150 18 L442 18 A74 74 0 0 1 516 92 L516 354 A74 74 0 0 1 491 409.4 L439 455.4 A74 74 0 0 1 390 474 L98 474 A74 74 0 0 1 24 400 L24 138 A74 74 0 0 1 49 82.6 Z"/></clipPath>
+                            <clipPath id="pSideClip"><path d="M442.3 85.7 L494.3 39.7 A74 74 0 0 1 516 92 L516 354 A74 74 0 0 1 491 409.4 L439 455.4 A74 74 0 0 0 464 400 L464 138 A74 74 0 0 0 442.3 85.7 Z"/></clipPath>
+                            <clipPath id="pPanelClip"><rect x="66" y="116" width="346" height="323" rx="66"/></clipPath>
+                        </defs>
+
+                        <!-- contact shadow -->
+                        <ellipse cx="268" cy="489" rx="198" ry="19" fill="#08192B" opacity=".26" filter="url(#pSoft)"/>
+
+                        <!-- feet -->
+                        <g fill="#7A8590" opacity=".34">
+                            <rect x="98" y="466" width="32" height="13" rx="6"/>
+                            <rect x="364" y="466" width="32" height="13" rx="6"/>
+                            <rect x="430" y="436" width="28" height="12" rx="6" opacity=".8"/>
+                        </g>
+
+                        <!-- body shell -->
+                        <g filter="url(#pCast)">
+                            <path d="M49 82.6 L101 36.6 A74 74 0 0 1 150 18 L442 18 A74 74 0 0 1 516 92 L516 354 A74 74 0 0 1 491 409.4 L439 455.4 A74 74 0 0 1 390 474 L98 474 A74 74 0 0 1 24 400 L24 138 A74 74 0 0 1 49 82.6 Z" fill="url(#pShell)"/>
+                            <g clip-path="url(#pShellClip)">
+                                <path d="M442.3 85.7 L494.3 39.7 A74 74 0 0 1 516 92 L516 354 A74 74 0 0 1 491 409.4 L439 455.4 A74 74 0 0 0 464 400 L464 138 A74 74 0 0 0 442.3 85.7 Z" fill="url(#pSide)" filter="url(#pCrease)"/>
+                                <path d="M49 82.6 L101 36.6 A74 74 0 0 1 150 18 L442 18 A74 74 0 0 1 494.3 39.7 L442.3 85.7 A74 74 0 0 0 390 64 L98 64 A74 74 0 0 0 49 82.6 Z" fill="url(#pTop)" filter="url(#pCrease)"/>
+                            </g>
+                        </g>
+
+                        <!-- side vent grille -->
+                        <g clip-path="url(#pSideClip)" fill="#8C98A3" opacity=".72">
+                                <ellipse cx="477.0" cy="152.0" rx="2" ry="2.5"/><ellipse cx="477.0" cy="164.6" rx="2" ry="2.5"/><ellipse cx="477.0" cy="177.2" rx="2" ry="2.5"/><ellipse cx="477.0" cy="189.8" rx="2" ry="2.5"/><ellipse cx="477.0" cy="202.4" rx="2" ry="2.5"/><ellipse cx="477.0" cy="215.0" rx="2" ry="2.5"/><ellipse cx="477.0" cy="227.6" rx="2" ry="2.5"/><ellipse cx="477.0" cy="240.2" rx="2" ry="2.5"/><ellipse cx="477.0" cy="252.8" rx="2" ry="2.5"/><ellipse cx="477.0" cy="265.4" rx="2" ry="2.5"/>
+                                <ellipse cx="477.0" cy="278.0" rx="2" ry="2.5"/><ellipse cx="477.0" cy="290.6" rx="2" ry="2.5"/><ellipse cx="477.0" cy="303.2" rx="2" ry="2.5"/><ellipse cx="477.0" cy="315.8" rx="2" ry="2.5"/><ellipse cx="477.0" cy="328.4" rx="2" ry="2.5"/><ellipse cx="477.0" cy="341.0" rx="2" ry="2.5"/><ellipse cx="477.0" cy="353.6" rx="2" ry="2.5"/><ellipse cx="477.0" cy="366.2" rx="2" ry="2.5"/><ellipse cx="477.0" cy="378.8" rx="2" ry="2.5"/><ellipse cx="477.0" cy="391.4" rx="2" ry="2.5"/>
+                                <ellipse cx="483.6" cy="146.3" rx="2" ry="2.5"/><ellipse cx="483.6" cy="158.9" rx="2" ry="2.5"/><ellipse cx="483.6" cy="171.5" rx="2" ry="2.5"/><ellipse cx="483.6" cy="184.1" rx="2" ry="2.5"/><ellipse cx="483.6" cy="196.7" rx="2" ry="2.5"/><ellipse cx="483.6" cy="209.3" rx="2" ry="2.5"/><ellipse cx="483.6" cy="221.9" rx="2" ry="2.5"/><ellipse cx="483.6" cy="234.5" rx="2" ry="2.5"/><ellipse cx="483.6" cy="247.1" rx="2" ry="2.5"/><ellipse cx="483.6" cy="259.7" rx="2" ry="2.5"/>
+                                <ellipse cx="483.6" cy="272.3" rx="2" ry="2.5"/><ellipse cx="483.6" cy="284.9" rx="2" ry="2.5"/><ellipse cx="483.6" cy="297.5" rx="2" ry="2.5"/><ellipse cx="483.6" cy="310.1" rx="2" ry="2.5"/><ellipse cx="483.6" cy="322.7" rx="2" ry="2.5"/><ellipse cx="483.6" cy="335.3" rx="2" ry="2.5"/><ellipse cx="483.6" cy="347.9" rx="2" ry="2.5"/><ellipse cx="483.6" cy="360.5" rx="2" ry="2.5"/><ellipse cx="483.6" cy="373.1" rx="2" ry="2.5"/><ellipse cx="483.6" cy="385.7" rx="2" ry="2.5"/>
+                                <ellipse cx="490.2" cy="140.6" rx="2" ry="2.5"/><ellipse cx="490.2" cy="153.2" rx="2" ry="2.5"/><ellipse cx="490.2" cy="165.8" rx="2" ry="2.5"/><ellipse cx="490.2" cy="178.4" rx="2" ry="2.5"/><ellipse cx="490.2" cy="191.0" rx="2" ry="2.5"/><ellipse cx="490.2" cy="203.6" rx="2" ry="2.5"/><ellipse cx="490.2" cy="216.2" rx="2" ry="2.5"/><ellipse cx="490.2" cy="228.8" rx="2" ry="2.5"/><ellipse cx="490.2" cy="241.4" rx="2" ry="2.5"/><ellipse cx="490.2" cy="254.0" rx="2" ry="2.5"/>
+                                <ellipse cx="490.2" cy="266.6" rx="2" ry="2.5"/><ellipse cx="490.2" cy="279.2" rx="2" ry="2.5"/><ellipse cx="490.2" cy="291.8" rx="2" ry="2.5"/><ellipse cx="490.2" cy="304.4" rx="2" ry="2.5"/><ellipse cx="490.2" cy="317.0" rx="2" ry="2.5"/><ellipse cx="490.2" cy="329.6" rx="2" ry="2.5"/><ellipse cx="490.2" cy="342.2" rx="2" ry="2.5"/><ellipse cx="490.2" cy="354.8" rx="2" ry="2.5"/><ellipse cx="490.2" cy="367.4" rx="2" ry="2.5"/><ellipse cx="490.2" cy="380.0" rx="2" ry="2.5"/>
+                                <ellipse cx="496.8" cy="134.9" rx="2" ry="2.5"/><ellipse cx="496.8" cy="147.5" rx="2" ry="2.5"/><ellipse cx="496.8" cy="160.1" rx="2" ry="2.5"/><ellipse cx="496.8" cy="172.7" rx="2" ry="2.5"/><ellipse cx="496.8" cy="185.3" rx="2" ry="2.5"/><ellipse cx="496.8" cy="197.9" rx="2" ry="2.5"/><ellipse cx="496.8" cy="210.5" rx="2" ry="2.5"/><ellipse cx="496.8" cy="223.1" rx="2" ry="2.5"/><ellipse cx="496.8" cy="235.7" rx="2" ry="2.5"/><ellipse cx="496.8" cy="248.3" rx="2" ry="2.5"/>
+                                <ellipse cx="496.8" cy="260.9" rx="2" ry="2.5"/><ellipse cx="496.8" cy="273.5" rx="2" ry="2.5"/><ellipse cx="496.8" cy="286.1" rx="2" ry="2.5"/><ellipse cx="496.8" cy="298.7" rx="2" ry="2.5"/><ellipse cx="496.8" cy="311.3" rx="2" ry="2.5"/><ellipse cx="496.8" cy="323.9" rx="2" ry="2.5"/><ellipse cx="496.8" cy="336.5" rx="2" ry="2.5"/><ellipse cx="496.8" cy="349.1" rx="2" ry="2.5"/><ellipse cx="496.8" cy="361.7" rx="2" ry="2.5"/><ellipse cx="496.8" cy="374.3" rx="2" ry="2.5"/>
+                                <ellipse cx="503.4" cy="129.2" rx="2" ry="2.5"/><ellipse cx="503.4" cy="141.8" rx="2" ry="2.5"/><ellipse cx="503.4" cy="154.4" rx="2" ry="2.5"/><ellipse cx="503.4" cy="167.0" rx="2" ry="2.5"/><ellipse cx="503.4" cy="179.6" rx="2" ry="2.5"/><ellipse cx="503.4" cy="192.2" rx="2" ry="2.5"/><ellipse cx="503.4" cy="204.8" rx="2" ry="2.5"/><ellipse cx="503.4" cy="217.4" rx="2" ry="2.5"/><ellipse cx="503.4" cy="230.0" rx="2" ry="2.5"/><ellipse cx="503.4" cy="242.6" rx="2" ry="2.5"/>
+                                <ellipse cx="503.4" cy="255.2" rx="2" ry="2.5"/><ellipse cx="503.4" cy="267.8" rx="2" ry="2.5"/><ellipse cx="503.4" cy="280.4" rx="2" ry="2.5"/><ellipse cx="503.4" cy="293.0" rx="2" ry="2.5"/><ellipse cx="503.4" cy="305.6" rx="2" ry="2.5"/><ellipse cx="503.4" cy="318.2" rx="2" ry="2.5"/><ellipse cx="503.4" cy="330.8" rx="2" ry="2.5"/><ellipse cx="503.4" cy="343.4" rx="2" ry="2.5"/><ellipse cx="503.4" cy="356.0" rx="2" ry="2.5"/><ellipse cx="503.4" cy="368.6" rx="2" ry="2.5"/>
+                                <ellipse cx="510.0" cy="123.5" rx="2" ry="2.5"/><ellipse cx="510.0" cy="136.1" rx="2" ry="2.5"/><ellipse cx="510.0" cy="148.7" rx="2" ry="2.5"/><ellipse cx="510.0" cy="161.3" rx="2" ry="2.5"/><ellipse cx="510.0" cy="173.9" rx="2" ry="2.5"/><ellipse cx="510.0" cy="186.5" rx="2" ry="2.5"/><ellipse cx="510.0" cy="199.1" rx="2" ry="2.5"/><ellipse cx="510.0" cy="211.7" rx="2" ry="2.5"/><ellipse cx="510.0" cy="224.3" rx="2" ry="2.5"/><ellipse cx="510.0" cy="236.9" rx="2" ry="2.5"/>
+                                <ellipse cx="510.0" cy="249.5" rx="2" ry="2.5"/><ellipse cx="510.0" cy="262.1" rx="2" ry="2.5"/><ellipse cx="510.0" cy="274.7" rx="2" ry="2.5"/><ellipse cx="510.0" cy="287.3" rx="2" ry="2.5"/><ellipse cx="510.0" cy="299.9" rx="2" ry="2.5"/><ellipse cx="510.0" cy="312.5" rx="2" ry="2.5"/><ellipse cx="510.0" cy="325.1" rx="2" ry="2.5"/><ellipse cx="510.0" cy="337.7" rx="2" ry="2.5"/><ellipse cx="510.0" cy="350.3" rx="2" ry="2.5"/><ellipse cx="510.0" cy="362.9" rx="2" ry="2.5"/>
+                        </g>
+
+                        <!-- glossy rim light around the silhouette -->
+                        <path d="M49 82.6 L101 36.6 A74 74 0 0 1 150 18 L442 18 A74 74 0 0 1 516 92 L516 354 A74 74 0 0 1 491 409.4 L439 455.4 A74 74 0 0 1 390 474 L98 474 A74 74 0 0 1 24 400 L24 138 A74 74 0 0 1 49 82.6 Z" fill="none" stroke="#FFFFFF" stroke-opacity=".45"/>
+
+                        <!-- front face -->
+                        <rect x="24" y="64" width="440" height="410" rx="74" fill="url(#pFace)"/>
+                        <rect x="24.6" y="64.6" width="438.8" height="408.8" rx="73.4" fill="none" stroke="#FFFFFF" stroke-opacity=".85"/>
+
+                        <!-- recessed channel -->
+                        <rect x="44" y="82" width="400" height="374" rx="64" fill="url(#pRecess)"/>
+                        <rect x="44.5" y="82.5" width="399" height="373" rx="63.5" fill="none" stroke="#06203C" stroke-opacity=".55"/>
+
+                        <!-- status light: crown bar + the two side washes -->
+                        <g>
+                            <rect x="176" y="103" width="126" height="11" rx="5.5" fill="url(#pLed)" opacity=".9" filter="url(#pBloom)"/>
+                            <rect x="182" y="106.5" width="114" height="6" rx="3" fill="url(#pLed)"/>
+                            <rect x="46" y="228" width="18" height="112" rx="9" fill="url(#pLedV)" opacity=".8" filter="url(#pBloomV)"/>
+                            <rect x="50" y="236" width="10" height="96" rx="5" fill="url(#pLedV)" opacity=".95"/>
+                            <rect x="413" y="226" width="30" height="118" rx="15" fill="url(#pLedV)" opacity=".85" filter="url(#pBloomV)"/>
+                            <rect x="420" y="236" width="16" height="100" rx="8" fill="url(#pLedV)"/>
+                        </g>
+
+                        <!-- floating front panel -->
+                        <g filter="url(#pPanelSh)">
+                            <rect x="66" y="116" width="346" height="323" rx="66" fill="url(#pPanel)"/>
+                        </g>
+                        <g clip-path="url(#pPanelClip)">
+                            <rect x="66" y="116" width="150" height="323" fill="url(#pSheen)" opacity=".55"/>
+                        </g>
+                        <rect x="66.6" y="116.6" width="344.8" height="321.8" rx="65.4" fill="none" stroke="#FFFFFF" stroke-opacity=".9"/>
+
+                        <text class="pd__brand" x="239" y="235" text-anchor="middle">Air AQ</text>
+                        <circle cx="239" cy="374" r="17.5" fill="none" stroke="#48C7F2" stroke-width="3.4" opacity=".55" filter="url(#pBloomV)"/>
+                        <circle cx="239" cy="374" r="17.5" fill="none" stroke="#3FC5EE" stroke-width="3.2"/>
+
+                        <!-- top-deck controls -->
+                        <g fill="none" stroke="#A6B1BA" stroke-width="2.4" stroke-linecap="round" opacity=".9">
+                            <g transform="translate(224 33) scale(1 .72)">
+                                <path d="M-8-3.5c4.6-4.4 11.4-4.4 16 0"/>
+                                <path d="M-4.4 1.6c2.5-2.4 6.3-2.4 8.8 0"/>
+                                <circle cx="0" cy="6.4" r="1.5" fill="#A6B1BA" stroke="none"/>
+                            </g>
+                            <g transform="translate(290 32) scale(1 .72)">
+                                <circle cx="0" cy="0" r="13" stroke="#49C8F3" stroke-width="3" opacity=".45" filter="url(#pBloomV)"/>
+                                <circle cx="0" cy="0" r="13" stroke="#3FC5EE" stroke-width="2.8"/>
+                                <path d="M0-6.5v6" stroke="#3FC5EE" stroke-width="2.6"/>
+                            </g>
+                            <g transform="translate(364 31) scale(1 .72)">
+                                <circle cx="0" cy="0" r="7.6"/>
+                                <circle cx="0" cy="0" r="2.4" fill="#A6B1BA" stroke="none"/>
+                            </g>
+                        </g>
+                    </svg>
+                <div class="pdevice__reflect" aria-hidden="true"></div>
+            </div>
+
+            <article class="scard scard--co2" data-reveal style="--d:0ms">
+                    <span class="scard__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="8" cy="12" r="4.2" stroke="currentColor" stroke-width="1.6"/><circle cx="17" cy="12" r="3.2" stroke="currentColor" stroke-width="1.6"/></svg></span>
+                    <span class="scard__body">
+                        <span class="scard__name">CO₂</span>
+                        <span class="scard__desc">Ventilation awareness</span>
+                    </span>
+                </article>
+
+            <article class="scard scard--pm" data-reveal style="--d:80ms">
+                    <span class="scard__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="7" cy="8" r="1.6" fill="currentColor"/><circle cx="14" cy="6.5" r="1.1" fill="currentColor"/><circle cx="17.5" cy="12" r="1.6" fill="currentColor"/><circle cx="10" cy="14" r="1.2" fill="currentColor"/><circle cx="6.5" cy="17.5" r="1.1" fill="currentColor"/><circle cx="15" cy="18" r="1.4" fill="currentColor"/></svg></span>
+                    <span class="scard__body">
+                        <span class="scard__name">PM2.5</span>
+                        <span class="scard__desc">Fine particle monitoring</span>
+                    </span>
+                </article>
+
+            <article class="scard scard--voc" data-reveal style="--d:160ms">
+                    <span class="scard__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 4c2.6 2.6 4 4.9 4 7a4 4 0 1 1-8 0c0-2.1 1.4-4.4 4-7Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M6.5 18.5h11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>
+                    <span class="scard__body">
+                        <span class="scard__name">VOC</span>
+                        <span class="scard__desc">Indoor pollutant awareness</span>
+                    </span>
+                </article>
+
+            <article class="scard scard--gas" data-reveal style="--d:200ms">
+                    <span class="scard__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5c3.4 3.2 5.6 6 5.6 8.9A5.6 5.6 0 0 1 12 18a5.6 5.6 0 0 1-5.6-5.6c0-2.9 2.2-5.7 5.6-8.9Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9.6 13.4a2.5 2.5 0 0 0 2.4 2.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></span>
+                    <span class="scard__body">
+                        <span class="scard__name">Gas</span>
+                        <span class="scard__desc">Abnormal gas detection</span>
+                    </span>
+                </article>
+
+            <article class="scard scard--th" data-reveal style="--d:280ms">
+                    <span class="scard__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M10 13.6V6a2 2 0 1 1 4 0v7.6a4 4 0 1 1-4 0Z" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="16.6" r="1.6" fill="currentColor"/></svg></span>
+                    <span class="scard__body">
+                        <span class="scard__name">Temperature &amp; Humidity</span>
+                        <span class="scard__desc">Indoor environment monitoring</span>
+                    </span>
+                </article>
+
+            <article class="aicard" data-reveal style="--d:240ms">
+                <header class="aicard__head">
+                    <span class="aicard__spark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5 13.7 8l4.5 1.7-4.5 1.7L12 15.9l-1.7-4.5L5.8 9.7 10.3 8 12 3.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M18 16.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8.8-2Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg></span>
+                    <span class="aicard__label">AI Air Insight</span>
+                </header>
+                <p class="aicard__state">Air Needs Attention</p>
+                <p class="aicard__note">CO₂ levels are elevated. The room may need better ventilation.</p>
+                <div class="aicard__meter" aria-hidden="true"><span></span></div>
+            </article>
+
+            <div class="phone" data-reveal style="--d:340ms">
+                <div class="phone__frame">
+                    <span class="phone__notch" aria-hidden="true"></span>
+                    <div class="phone__screen">
+                        <p class="phone__room">Living Room</p>
+                        <div class="phone__status">
+                            <span class="phone__ring" aria-hidden="true"></span>
+                            <span class="phone__statusText">
+                                <span class="phone__statusLabel">Air Quality</span>
+                                <span class="phone__statusValue">Good</span>
+                            </span>
+                        </div>
+                        <ul class="phone__list">
+                            <li><span>CO₂</span><strong>612</strong></li>
+                            <li><span>PM2.5</span><strong>6</strong></li>
+                            <li><span>VOC</span><strong>0.3</strong></li>
+                            <li><span>Gas</span><strong>Safe</strong></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- sensors detect -> AI understands -> Air AQ alerts -->
+    <ol class="chain" aria-label="How Air AQ works">
+        <li class="chain__step" data-reveal>
+            <span class="chain__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="8" y="3" width="8" height="18" rx="4" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="9" r="1.6" fill="currentColor"/></svg></span>
+            <span class="chain__text">Sensors Detect</span>
+        </li>
+        <li class="chain__step" data-reveal style="--d:120ms">
+            <span class="chain__icon chain__icon--ai" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5 13.7 8l4.5 1.7-4.5 1.7L12 15.9l-1.7-4.5L5.8 9.7 10.3 8 12 3.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M18 16.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8.8-2Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg></span>
+            <span class="chain__text">AI Understands</span>
+        </li>
+        <li class="chain__step" data-reveal style="--d:240ms">
+            <span class="chain__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M6.5 10a5.5 5.5 0 1 1 11 0c0 4 1.5 5.4 1.5 5.4H5S6.5 14 6.5 10Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M10.2 18.4a2 2 0 0 0 3.6 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+            <span class="chain__text">Air AQ Alerts</span>
+        </li>
+    </ol>
+
+</section>
+
+</div><!-- /.airband -->
+
+<!-- ═══ TRUST — ONE DEVICE, EVERY SPACE ═════════════════════════════════ -->
+<!-- One screen, held. The product arrives out of the product section on the
+     flight, settles smaller and a little higher on the left, and then the
+     statement on the right gives its place up to six photographs — each one
+     sliding in from outside the right edge of the page onto the very same
+     spot, each with its own words under the product on the left.
+
+     Nothing in here is timed. Every moving value is a position the scroll is
+     at, written by script.js part 6 and read back by the stylesheet. -->
+<section class="assure" id="trust">
+
+    <!-- the ground, on its own layer so it can be pinned with the stage: the
+         section's box is far longer than a screen (that length is the second
+         act's scroll), and a ramp painted across all of it would slide while
+         the stage is held still. This paints the same ramp over one screen and
+         stays with the stage. The seam hairline is left where it is, on the
+         section itself. -->
+    <div class="assure__ground" aria-hidden="true"></div>
+
+    <div class="assure__air" aria-hidden="true">
+        <div class="assure__bloom assure__bloom--a"></div>
+        <div class="assure__bloom assure__bloom--b"></div>
+    </div>
+
+    <div class="reel" id="trust-reel">
+
+        <!-- where the flight ends. The dock below still holds the left column
+             open; this is the box the product itself is drawn to, placed on
+             the held screen rather than in the grid so the landing is one
+             exact rect: 14.2% / 31.5% of the screen, 24.5% of its width.
+             Positioned against .reel, which is one screen tall and stuck to
+             the top of the viewport while the stage is held, so those
+             percentages are the viewport's. -->
+        <div class="reel__mark" id="trust-mark" aria-hidden="true"></div>
+
+        <div class="reel__stage">
+            <div class="reel__grid">
+
+                <!-- the left column: nothing but the invisible box that holds
+                     it open. The product is drawn over it by the flight; the
+                     column itself carries no content. -->
+                <div class="reel__left">
+                    <div class="reel__dock" id="trust-dock" aria-hidden="true"></div>
+                </div>
+
+                <!-- the right column holds the statement and every photograph in
+                     the same box: one grid cell, all of them in it, so each
+                     picture arrives exactly where the words were and every one
+                     after it lands on exactly the same spot. Each photograph
+                     carries its own heading and line in its own <figure>, so
+                     the words arrive, rest and leave on the picture's numbers
+                     and there is no second clock to keep them in step. -->
+                <div class="reel__right">
+
+                    <div class="reel__copy">
+                        <h2 class="reel__title" data-reveal>One Device. Protection for Every Space.</h2>
+                        <p class="reel__line" data-reveal style="--d:120ms">Air AQ stays with the spaces that matter most—from the rooms where your family rests to the places you work, cook, and travel. Continuous monitoring helps you stay aware of the air around you, wherever life happens.</p>
+                        <a class="btn btn--solid reel__cta" href="#" data-reveal style="--d:240ms">
+                            Get Air AQ
+                            <svg class="btn__arrow" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                <path d="M4 10h11m0 0-4.2-4.2M15 10l-4.2 4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </a>
+                    </div>
+
+                    <figure class="reel__shot">
+                        <picture>
+                            <source srcset="assets/image/spaces/img1.webp" type="image/webp">
+                            <img src="assets/image/img1.png" alt="A family in an open-plan living room, with the Air AQ monitor on a side table beside the sofa" loading="lazy" decoding="async" width="1672" height="941">
+                        </picture>
+                        <figcaption class="reel__shot-words">
+                            <h3 class="reel__shot-title">Where Your Family Breathes</h3>
+                            <p class="reel__shot-line">Reading the air your family shares, through the day and all through the night.</p>
+                        </figcaption>
+                    </figure>
+
+                    
+                    <figure class="reel__shot">
+                        <picture>
+                            <source srcset="assets/image/spaces/img3.webp" type="image/webp">
+                            <img src="assets/image/img3.png" alt="A couple driving through city traffic, the Air AQ monitor on the dashboard" loading="lazy" decoding="async" width="1536" height="1024">
+                        </picture>
+                        <figcaption class="reel__shot-words">
+                            <h3 class="reel__shot-title">The Air You Travel In</h3>
+                            <p class="reel__shot-line">Air AQ reads the cabin on the move and says when to close the vents.</p>
+                        </figcaption>
+                    </figure>
+
+
+                    <figure class="reel__shot">
+                        <picture>
+                            <source srcset="assets/image/spaces/img6.webp" type="image/webp">
+                            <img src="assets/image/img6.png" alt="A man at an office desk checking the Air AQ app, an alert showing the living room reading as good" loading="lazy" decoding="async" width="1536" height="1024">
+                        </picture>
+                        <figcaption class="reel__shot-words">
+                            <h3 class="reel__shot-title">Home, From Anywhere</h3>
+                            <p class="reel__shot-line">At work, one glance is enough. The room you left keeps reporting.</p>
+                        </figcaption>
+                    </figure>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</section>
+
+
+<!-- ═══ WHY CHOOSE AIR AQ ═══════════════════════════════════════════════
+     The page's first light section, and the join is the whole trick: the
+     trust render closes on a pale blue floor, so this one opens on that
+     same Glacier and walks up to white over its first third. Nothing marks
+     the seam.
+
+     The composition is an orbit, not a card grid: the device holds the
+     middle and six benefits sit around it on a coordinate space the SVG
+     underneath shares, so every connecting line starts on the device's
+     shell and ends exactly where its benefit is — at any width, because
+     the stage keeps one aspect ratio and the cards are placed in the same
+     percentages the paths are drawn in.
+
+     Nothing here is scrubbed. The reveal is the page's own observer, and
+     the six arrive one after another on their own --d.                  -->
+<section class="whyaq" id="why-air-aq">
+
+    <div class="whyaq__air" aria-hidden="true">
+        <div class="whyaq__bloom whyaq__bloom--a"></div>
+        <div class="whyaq__bloom whyaq__bloom--b"></div>
+    </div>
+
+    <div class="whyaq__inner">
+
+        <header class="whyaq__head">
+            <p class="whyaq__eyebrow" data-reveal>Why Air AQ</p>
+            <h2 class="whyaq__title" data-reveal style="--d:110ms">More Than a Monitor. A Smarter Way to Understand Your&nbsp;Air.</h2>
+            <p class="whyaq__lead" data-reveal style="--d:220ms">Air AQ turns continuous air-quality readings into clear, useful information—helping you understand what’s happening around you and when it needs your attention.</p>
+        </header>
+
+        <!-- the stage. 1200 × 780 is the coordinate space; the SVG is drawn
+             in it and every card is placed in percentages of it, so the two
+             cannot drift apart. -->
+        <div class="orbit">
+
+            <!-- the air the device is reading: two rings and six lines out to
+                 the benefits, each line drawn on with its own benefit -->
+            <svg class="orbit__flow" viewBox="0 0 1200 780" fill="none" aria-hidden="true">
+                <defs>
+                    <linearGradient id="wFlowL" x1="1" y1="0" x2="0" y2="0">
+                        <stop offset="0%"   stop-color="#447F98" stop-opacity=".85"/>
+                        <stop offset="52%"  stop-color="#629BB5" stop-opacity=".70"/>
+                        <stop offset="100%" stop-color="#B9D9E1" stop-opacity=".05"/>
+                    </linearGradient>
+                    <linearGradient id="wFlowR" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%"   stop-color="#447F98" stop-opacity=".85"/>
+                        <stop offset="52%"  stop-color="#629BB5" stop-opacity=".70"/>
+                        <stop offset="100%" stop-color="#B9D9E1" stop-opacity=".05"/>
+                    </linearGradient>
+                </defs>
+
+                <g class="orbit__rings" stroke="#B9D9E1" fill="none">
+                    <ellipse cx="600" cy="392" rx="182" ry="176" stroke-width="1" opacity=".55"/>
+                    <ellipse cx="600" cy="392" rx="252" ry="242" stroke-width="1" opacity=".32"/>
+                </g>
+
+                <g fill="none" stroke-linecap="round" stroke-width="1.6">
+                    <path class="oflow" data-reveal style="--d:380ms" stroke="url(#wFlowL)" pathLength="1" d="M520 302C472 244 448 158 384 120"/>
+                    <path class="oflow" data-reveal style="--d:500ms" stroke="url(#wFlowL)" pathLength="1" d="M492 386C438 380 396 392 334 392"/>
+                    <path class="oflow" data-reveal style="--d:620ms" stroke="url(#wFlowL)" pathLength="1" d="M523 480C470 546 444 640 399 664"/>
+                    <path class="oflow" data-reveal style="--d:740ms" stroke="url(#wFlowR)" pathLength="1" d="M680 302C728 244 752 158 816 120"/>
+                    <path class="oflow" data-reveal style="--d:860ms" stroke="url(#wFlowR)" pathLength="1" d="M708 386C762 380 804 392 866 392"/>
+                    <path class="oflow" data-reveal style="--d:980ms" stroke="url(#wFlowR)" pathLength="1" d="M677 480C730 546 756 640 801 664"/>
+                </g>
+            </svg>
+
+            <!-- the middle: the same device the rest of the page shows, at a
+                 size that leaves the air around it empty on purpose -->
+            <!-- the middle. The core carries no reveal of its own: #why-mark is
+                 the box the flying device is drawn to, and a box that is being
+                 measured every frame must never be under a transform. The light
+                 around it arrives on the section's own reveal instead.
+
+                 Which of the two is in the flow is decided by the flight: with
+                 it running, the mark holds the space and the device that has
+                 been on the page since the hero lands in it. With it off — a
+                 narrow layout, reduced motion, no script — the vector below is
+                 the product, exactly as it was. -->
+            <div class="orbit__core">
+                <div class="orbit__halo" data-reveal style="--d:260ms" aria-hidden="true"></div>
+                <div class="orbit__mark" id="why-mark" aria-hidden="true"></div>
+            <svg class="device pdevice worb__device" data-reveal style="--d:300ms" viewBox="0 0 530 525" role="img" aria-label="The Air AQ indoor air-quality monitor">
+                <defs>
+                    <linearGradient id="pShellW" x1=".05" y1="0" x2=".95" y2=".55">
+                        <stop offset="0%" stop-color="#FFFFFF"/>
+                        <stop offset="45%" stop-color="#EDF1F5"/>
+                        <stop offset="100%" stop-color="#C2CBD4"/>
+                    </linearGradient>
+                    <linearGradient id="pTopW" x1=".1" y1="1" x2=".85" y2="0">
+                        <stop offset="0%" stop-color="#FFFFFF"/>
+                        <stop offset="60%" stop-color="#F4F7FA"/>
+                        <stop offset="100%" stop-color="#E2E8EE"/>
+                    </linearGradient>
+                    <linearGradient id="pSideW" x1="0" y1=".1" x2=".9" y2=".95">
+                        <stop offset="0%" stop-color="#E3E9EF"/>
+                        <stop offset="45%" stop-color="#CDD5DD"/>
+                        <stop offset="100%" stop-color="#AFB9C3"/>
+                    </linearGradient>
+                    <linearGradient id="pFaceW" x1=".08" y1="0" x2=".92" y2="1">
+                        <stop offset="0%" stop-color="#FFFFFF"/>
+                        <stop offset="52%" stop-color="#F6F9FB"/>
+                        <stop offset="100%" stop-color="#DFE6EC"/>
+                    </linearGradient>
+                    <linearGradient id="pRecessW" x1=".12" y1="0" x2=".95" y2=".85">
+                        <stop offset="0%" stop-color="#1D5A93"/>
+                        <stop offset="34%" stop-color="#103C6B"/>
+                        <stop offset="72%" stop-color="#07203C"/>
+                        <stop offset="100%" stop-color="#020C18"/>
+                    </linearGradient>
+                    <linearGradient id="pPanelW" x1=".1" y1="0" x2=".9" y2="1">
+                        <stop offset="0%" stop-color="#FFFFFF"/>
+                        <stop offset="55%" stop-color="#F7FAFC"/>
+                        <stop offset="100%" stop-color="#E1E8EF"/>
+                    </linearGradient>
+                    <linearGradient id="pLedW" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stop-color="#2FA6ED" stop-opacity="0"/>
+                        <stop offset="22%" stop-color="#A9EBFF"/>
+                        <stop offset="52%" stop-color="#DFF7FF"/>
+                        <stop offset="80%" stop-color="#4FC2F7"/>
+                        <stop offset="100%" stop-color="#1E7FC8" stop-opacity="0"/>
+                    </linearGradient>
+                    <linearGradient id="pLedVW" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#1E7FC8" stop-opacity="0"/>
+                        <stop offset="30%" stop-color="#3FB4F5"/>
+                        <stop offset="52%" stop-color="#9FE6FF"/>
+                        <stop offset="74%" stop-color="#2E9CE8"/>
+                        <stop offset="100%" stop-color="#1668B0" stop-opacity="0"/>
+                    </linearGradient>
+                    <linearGradient id="pSheenW" x1="0" y1="0" x2="1" y2=".3">
+                        <stop offset="0%" stop-color="#FFFFFF" stop-opacity=".85"/>
+                        <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+                    </linearGradient>
+                    <filter id="pCastW" x="-40%" y="-25%" width="185%" height="175%">
+                        <feDropShadow dx="0" dy="26" stdDeviation="22" flood-color="#0C2338" flood-opacity=".32"/>
+                    </filter>
+                    <filter id="pPanelShW" x="-35%" y="-30%" width="175%" height="180%">
+                        <feDropShadow dx="7" dy="11" stdDeviation="11" flood-color="#020F1E" flood-opacity=".55"/>
+                    </filter>
+                    <filter id="pBloomW" x="-160%" y="-320%" width="420%" height="740%">
+                        <feGaussianBlur stdDeviation="7"/>
+                    </filter>
+                    <filter id="pBloomVW" x="-320%" y="-90%" width="740%" height="280%">
+                        <feGaussianBlur stdDeviation="6"/>
+                    </filter>
+                    <filter id="pSoftW" x="-60%" y="-70%" width="220%" height="240%">
+                        <feGaussianBlur stdDeviation="9"/>
+                    </filter>
+                    <filter id="pCreaseW" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="3.2"/></filter>
+                    <clipPath id="pShellClipW"><path d="M49 82.6 L101 36.6 A74 74 0 0 1 150 18 L442 18 A74 74 0 0 1 516 92 L516 354 A74 74 0 0 1 491 409.4 L439 455.4 A74 74 0 0 1 390 474 L98 474 A74 74 0 0 1 24 400 L24 138 A74 74 0 0 1 49 82.6 Z"/></clipPath>
+                    <clipPath id="pSideClipW"><path d="M442.3 85.7 L494.3 39.7 A74 74 0 0 1 516 92 L516 354 A74 74 0 0 1 491 409.4 L439 455.4 A74 74 0 0 0 464 400 L464 138 A74 74 0 0 0 442.3 85.7 Z"/></clipPath>
+                    <clipPath id="pPanelClipW"><rect x="66" y="116" width="346" height="323" rx="66"/></clipPath>
+                </defs>
+
+                <!-- contact shadow -->
+                <ellipse cx="268" cy="489" rx="198" ry="19" fill="#08192B" opacity=".26" filter="url(#pSoftW)"/>
+
+                <!-- feet -->
+                <g fill="#7A8590" opacity=".34">
+                    <rect x="98" y="466" width="32" height="13" rx="6"/>
+                    <rect x="364" y="466" width="32" height="13" rx="6"/>
+                    <rect x="430" y="436" width="28" height="12" rx="6" opacity=".8"/>
+                </g>
+
+                <!-- body shell -->
+                <g filter="url(#pCastW)">
+                    <path d="M49 82.6 L101 36.6 A74 74 0 0 1 150 18 L442 18 A74 74 0 0 1 516 92 L516 354 A74 74 0 0 1 491 409.4 L439 455.4 A74 74 0 0 1 390 474 L98 474 A74 74 0 0 1 24 400 L24 138 A74 74 0 0 1 49 82.6 Z" fill="url(#pShellW)"/>
+                    <g clip-path="url(#pShellClipW)">
+                        <path d="M442.3 85.7 L494.3 39.7 A74 74 0 0 1 516 92 L516 354 A74 74 0 0 1 491 409.4 L439 455.4 A74 74 0 0 0 464 400 L464 138 A74 74 0 0 0 442.3 85.7 Z" fill="url(#pSideW)" filter="url(#pCreaseW)"/>
+                        <path d="M49 82.6 L101 36.6 A74 74 0 0 1 150 18 L442 18 A74 74 0 0 1 494.3 39.7 L442.3 85.7 A74 74 0 0 0 390 64 L98 64 A74 74 0 0 0 49 82.6 Z" fill="url(#pTopW)" filter="url(#pCreaseW)"/>
+                    </g>
+                </g>
+
+                <!-- side vent grille -->
+                <g clip-path="url(#pSideClipW)" fill="#8C98A3" opacity=".72">
+                        <ellipse cx="477.0" cy="152.0" rx="2" ry="2.5"/><ellipse cx="477.0" cy="164.6" rx="2" ry="2.5"/><ellipse cx="477.0" cy="177.2" rx="2" ry="2.5"/><ellipse cx="477.0" cy="189.8" rx="2" ry="2.5"/><ellipse cx="477.0" cy="202.4" rx="2" ry="2.5"/><ellipse cx="477.0" cy="215.0" rx="2" ry="2.5"/><ellipse cx="477.0" cy="227.6" rx="2" ry="2.5"/><ellipse cx="477.0" cy="240.2" rx="2" ry="2.5"/><ellipse cx="477.0" cy="252.8" rx="2" ry="2.5"/><ellipse cx="477.0" cy="265.4" rx="2" ry="2.5"/>
+                        <ellipse cx="477.0" cy="278.0" rx="2" ry="2.5"/><ellipse cx="477.0" cy="290.6" rx="2" ry="2.5"/><ellipse cx="477.0" cy="303.2" rx="2" ry="2.5"/><ellipse cx="477.0" cy="315.8" rx="2" ry="2.5"/><ellipse cx="477.0" cy="328.4" rx="2" ry="2.5"/><ellipse cx="477.0" cy="341.0" rx="2" ry="2.5"/><ellipse cx="477.0" cy="353.6" rx="2" ry="2.5"/><ellipse cx="477.0" cy="366.2" rx="2" ry="2.5"/><ellipse cx="477.0" cy="378.8" rx="2" ry="2.5"/><ellipse cx="477.0" cy="391.4" rx="2" ry="2.5"/>
+                        <ellipse cx="483.6" cy="146.3" rx="2" ry="2.5"/><ellipse cx="483.6" cy="158.9" rx="2" ry="2.5"/><ellipse cx="483.6" cy="171.5" rx="2" ry="2.5"/><ellipse cx="483.6" cy="184.1" rx="2" ry="2.5"/><ellipse cx="483.6" cy="196.7" rx="2" ry="2.5"/><ellipse cx="483.6" cy="209.3" rx="2" ry="2.5"/><ellipse cx="483.6" cy="221.9" rx="2" ry="2.5"/><ellipse cx="483.6" cy="234.5" rx="2" ry="2.5"/><ellipse cx="483.6" cy="247.1" rx="2" ry="2.5"/><ellipse cx="483.6" cy="259.7" rx="2" ry="2.5"/>
+                        <ellipse cx="483.6" cy="272.3" rx="2" ry="2.5"/><ellipse cx="483.6" cy="284.9" rx="2" ry="2.5"/><ellipse cx="483.6" cy="297.5" rx="2" ry="2.5"/><ellipse cx="483.6" cy="310.1" rx="2" ry="2.5"/><ellipse cx="483.6" cy="322.7" rx="2" ry="2.5"/><ellipse cx="483.6" cy="335.3" rx="2" ry="2.5"/><ellipse cx="483.6" cy="347.9" rx="2" ry="2.5"/><ellipse cx="483.6" cy="360.5" rx="2" ry="2.5"/><ellipse cx="483.6" cy="373.1" rx="2" ry="2.5"/><ellipse cx="483.6" cy="385.7" rx="2" ry="2.5"/>
+                        <ellipse cx="490.2" cy="140.6" rx="2" ry="2.5"/><ellipse cx="490.2" cy="153.2" rx="2" ry="2.5"/><ellipse cx="490.2" cy="165.8" rx="2" ry="2.5"/><ellipse cx="490.2" cy="178.4" rx="2" ry="2.5"/><ellipse cx="490.2" cy="191.0" rx="2" ry="2.5"/><ellipse cx="490.2" cy="203.6" rx="2" ry="2.5"/><ellipse cx="490.2" cy="216.2" rx="2" ry="2.5"/><ellipse cx="490.2" cy="228.8" rx="2" ry="2.5"/><ellipse cx="490.2" cy="241.4" rx="2" ry="2.5"/><ellipse cx="490.2" cy="254.0" rx="2" ry="2.5"/>
+                        <ellipse cx="490.2" cy="266.6" rx="2" ry="2.5"/><ellipse cx="490.2" cy="279.2" rx="2" ry="2.5"/><ellipse cx="490.2" cy="291.8" rx="2" ry="2.5"/><ellipse cx="490.2" cy="304.4" rx="2" ry="2.5"/><ellipse cx="490.2" cy="317.0" rx="2" ry="2.5"/><ellipse cx="490.2" cy="329.6" rx="2" ry="2.5"/><ellipse cx="490.2" cy="342.2" rx="2" ry="2.5"/><ellipse cx="490.2" cy="354.8" rx="2" ry="2.5"/><ellipse cx="490.2" cy="367.4" rx="2" ry="2.5"/><ellipse cx="490.2" cy="380.0" rx="2" ry="2.5"/>
+                        <ellipse cx="496.8" cy="134.9" rx="2" ry="2.5"/><ellipse cx="496.8" cy="147.5" rx="2" ry="2.5"/><ellipse cx="496.8" cy="160.1" rx="2" ry="2.5"/><ellipse cx="496.8" cy="172.7" rx="2" ry="2.5"/><ellipse cx="496.8" cy="185.3" rx="2" ry="2.5"/><ellipse cx="496.8" cy="197.9" rx="2" ry="2.5"/><ellipse cx="496.8" cy="210.5" rx="2" ry="2.5"/><ellipse cx="496.8" cy="223.1" rx="2" ry="2.5"/><ellipse cx="496.8" cy="235.7" rx="2" ry="2.5"/><ellipse cx="496.8" cy="248.3" rx="2" ry="2.5"/>
+                        <ellipse cx="496.8" cy="260.9" rx="2" ry="2.5"/><ellipse cx="496.8" cy="273.5" rx="2" ry="2.5"/><ellipse cx="496.8" cy="286.1" rx="2" ry="2.5"/><ellipse cx="496.8" cy="298.7" rx="2" ry="2.5"/><ellipse cx="496.8" cy="311.3" rx="2" ry="2.5"/><ellipse cx="496.8" cy="323.9" rx="2" ry="2.5"/><ellipse cx="496.8" cy="336.5" rx="2" ry="2.5"/><ellipse cx="496.8" cy="349.1" rx="2" ry="2.5"/><ellipse cx="496.8" cy="361.7" rx="2" ry="2.5"/><ellipse cx="496.8" cy="374.3" rx="2" ry="2.5"/>
+                        <ellipse cx="503.4" cy="129.2" rx="2" ry="2.5"/><ellipse cx="503.4" cy="141.8" rx="2" ry="2.5"/><ellipse cx="503.4" cy="154.4" rx="2" ry="2.5"/><ellipse cx="503.4" cy="167.0" rx="2" ry="2.5"/><ellipse cx="503.4" cy="179.6" rx="2" ry="2.5"/><ellipse cx="503.4" cy="192.2" rx="2" ry="2.5"/><ellipse cx="503.4" cy="204.8" rx="2" ry="2.5"/><ellipse cx="503.4" cy="217.4" rx="2" ry="2.5"/><ellipse cx="503.4" cy="230.0" rx="2" ry="2.5"/><ellipse cx="503.4" cy="242.6" rx="2" ry="2.5"/>
+                        <ellipse cx="503.4" cy="255.2" rx="2" ry="2.5"/><ellipse cx="503.4" cy="267.8" rx="2" ry="2.5"/><ellipse cx="503.4" cy="280.4" rx="2" ry="2.5"/><ellipse cx="503.4" cy="293.0" rx="2" ry="2.5"/><ellipse cx="503.4" cy="305.6" rx="2" ry="2.5"/><ellipse cx="503.4" cy="318.2" rx="2" ry="2.5"/><ellipse cx="503.4" cy="330.8" rx="2" ry="2.5"/><ellipse cx="503.4" cy="343.4" rx="2" ry="2.5"/><ellipse cx="503.4" cy="356.0" rx="2" ry="2.5"/><ellipse cx="503.4" cy="368.6" rx="2" ry="2.5"/>
+                        <ellipse cx="510.0" cy="123.5" rx="2" ry="2.5"/><ellipse cx="510.0" cy="136.1" rx="2" ry="2.5"/><ellipse cx="510.0" cy="148.7" rx="2" ry="2.5"/><ellipse cx="510.0" cy="161.3" rx="2" ry="2.5"/><ellipse cx="510.0" cy="173.9" rx="2" ry="2.5"/><ellipse cx="510.0" cy="186.5" rx="2" ry="2.5"/><ellipse cx="510.0" cy="199.1" rx="2" ry="2.5"/><ellipse cx="510.0" cy="211.7" rx="2" ry="2.5"/><ellipse cx="510.0" cy="224.3" rx="2" ry="2.5"/><ellipse cx="510.0" cy="236.9" rx="2" ry="2.5"/>
+                        <ellipse cx="510.0" cy="249.5" rx="2" ry="2.5"/><ellipse cx="510.0" cy="262.1" rx="2" ry="2.5"/><ellipse cx="510.0" cy="274.7" rx="2" ry="2.5"/><ellipse cx="510.0" cy="287.3" rx="2" ry="2.5"/><ellipse cx="510.0" cy="299.9" rx="2" ry="2.5"/><ellipse cx="510.0" cy="312.5" rx="2" ry="2.5"/><ellipse cx="510.0" cy="325.1" rx="2" ry="2.5"/><ellipse cx="510.0" cy="337.7" rx="2" ry="2.5"/><ellipse cx="510.0" cy="350.3" rx="2" ry="2.5"/><ellipse cx="510.0" cy="362.9" rx="2" ry="2.5"/>
+                </g>
+
+                <!-- glossy rim light around the silhouette -->
+                <path d="M49 82.6 L101 36.6 A74 74 0 0 1 150 18 L442 18 A74 74 0 0 1 516 92 L516 354 A74 74 0 0 1 491 409.4 L439 455.4 A74 74 0 0 1 390 474 L98 474 A74 74 0 0 1 24 400 L24 138 A74 74 0 0 1 49 82.6 Z" fill="none" stroke="#FFFFFF" stroke-opacity=".45"/>
+
+                <!-- front face -->
+                <rect x="24" y="64" width="440" height="410" rx="74" fill="url(#pFaceW)"/>
+                <rect x="24.6" y="64.6" width="438.8" height="408.8" rx="73.4" fill="none" stroke="#FFFFFF" stroke-opacity=".85"/>
+
+                <!-- recessed channel -->
+                <rect x="44" y="82" width="400" height="374" rx="64" fill="url(#pRecessW)"/>
+                <rect x="44.5" y="82.5" width="399" height="373" rx="63.5" fill="none" stroke="#06203C" stroke-opacity=".55"/>
+
+                <!-- status light: crown bar + the two side washes -->
+                <g>
+                    <rect x="176" y="103" width="126" height="11" rx="5.5" fill="url(#pLedW)" opacity=".9" filter="url(#pBloomW)"/>
+                    <rect x="182" y="106.5" width="114" height="6" rx="3" fill="url(#pLedW)"/>
+                    <rect x="46" y="228" width="18" height="112" rx="9" fill="url(#pLedVW)" opacity=".8" filter="url(#pBloomVW)"/>
+                    <rect x="50" y="236" width="10" height="96" rx="5" fill="url(#pLedVW)" opacity=".95"/>
+                    <rect x="413" y="226" width="30" height="118" rx="15" fill="url(#pLedVW)" opacity=".85" filter="url(#pBloomVW)"/>
+                    <rect x="420" y="236" width="16" height="100" rx="8" fill="url(#pLedVW)"/>
+                </g>
+
+                <!-- floating front panel -->
+                <g filter="url(#pPanelShW)">
+                    <rect x="66" y="116" width="346" height="323" rx="66" fill="url(#pPanelW)"/>
+                </g>
+                <g clip-path="url(#pPanelClipW)">
+                    <rect x="66" y="116" width="150" height="323" fill="url(#pSheenW)" opacity=".55"/>
+                </g>
+                <rect x="66.6" y="116.6" width="344.8" height="321.8" rx="65.4" fill="none" stroke="#FFFFFF" stroke-opacity=".9"/>
+
+                <text class="pd__brand" x="239" y="235" text-anchor="middle">Air AQ</text>
+                <circle cx="239" cy="374" r="17.5" fill="none" stroke="#48C7F2" stroke-width="3.4" opacity=".55" filter="url(#pBloomVW)"/>
+                <circle cx="239" cy="374" r="17.5" fill="none" stroke="#3FC5EE" stroke-width="3.2"/>
+
+                <!-- top-deck controls -->
+                <g fill="none" stroke="#A6B1BA" stroke-width="2.4" stroke-linecap="round" opacity=".9">
+                    <g transform="translate(224 33) scale(1 .72)">
+                        <path d="M-8-3.5c4.6-4.4 11.4-4.4 16 0"/>
+                        <path d="M-4.4 1.6c2.5-2.4 6.3-2.4 8.8 0"/>
+                        <circle cx="0" cy="6.4" r="1.5" fill="#A6B1BA" stroke="none"/>
+                    </g>
+                    <g transform="translate(290 32) scale(1 .72)">
+                        <circle cx="0" cy="0" r="13" stroke="#49C8F3" stroke-width="3" opacity=".45" filter="url(#pBloomVW)"/>
+                        <circle cx="0" cy="0" r="13" stroke="#3FC5EE" stroke-width="2.8"/>
+                        <path d="M0-6.5v6" stroke="#3FC5EE" stroke-width="2.6"/>
+                    </g>
+                    <g transform="translate(364 31) scale(1 .72)">
+                        <circle cx="0" cy="0" r="7.6"/>
+                        <circle cx="0" cy="0" r="2.4" fill="#A6B1BA" stroke="none"/>
+                    </g>
+                </g>
+            </svg>
+                <div class="orbit__cast" data-reveal style="--d:300ms" aria-hidden="true"></div>
+            </div>
+
+            <!-- the six, placed on the same 1200 × 780 the paths are drawn in.
+                 The left three step out to 384 / 334 / 399 and the right three
+                 mirror them, so the column is an arc rather than an edge. -->
+
+            <div class="worb worb--1">
+                <article class="wcard" data-reveal style="--d:420ms">
+                    <div class="wcard__head">
+                        <span class="wcard__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M3.5 14.5h3l2-6 3 10 2.5-7 1.6 3h4.9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                        <span class="wcard__no">01</span>
+                    </div>
+                    <h3 class="wcard__title">Understand, Don’t Just Measure</h3>
+                    <p class="wcard__line">Turn sensor readings into clear, human-friendly insights instead of showing numbers alone.</p>
+                </article>
+            </div>
+
+            <div class="worb worb--2">
+                <article class="wcard" data-reveal style="--d:540ms">
+                    <div class="wcard__head">
+                        <span class="wcard__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.2" stroke="currentColor" stroke-width="1.6"/><path d="M12 7.4V12l3 1.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                        <span class="wcard__no">02</span>
+                    </div>
+                    <h3 class="wcard__title">Continuous Awareness</h3>
+                    <p class="wcard__line">Air AQ continuously monitors your environment without requiring constant manual checking.</p>
+                </article>
+            </div>
+
+            <div class="worb worb--3">
+                <article class="wcard" data-reveal style="--d:660ms">
+                    <div class="wcard__head">
+                        <span class="wcard__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M6.6 10.2a5.4 5.4 0 1 1 10.8 0c0 3.9 1.5 5.2 1.5 5.2H5.1s1.5-1.3 1.5-5.2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M10.2 18.3a2 2 0 0 0 3.6 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+                        <span class="wcard__no">03</span>
+                    </div>
+                    <h3 class="wcard__title">Smart Alerts</h3>
+                    <p class="wcard__line">Know when unusual air conditions need your attention.</p>
+                </article>
+            </div>
+
+            <div class="worb worb--4">
+                <article class="wcard" data-reveal style="--d:780ms">
+                    <div class="wcard__head">
+                        <span class="wcard__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="7.6" y="2.9" width="8.8" height="18.2" rx="2.4" stroke="currentColor" stroke-width="1.6"/><path d="M10.9 5.6h2.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="12" cy="17.6" r="1.1" fill="currentColor"/></svg></span>
+                        <span class="wcard__no">04</span>
+                    </div>
+                    <h3 class="wcard__title">Stay Connected</h3>
+                    <p class="wcard__line">Receive important air-quality information through your smartphone, even when you’re away.</p>
+                </article>
+            </div>
+
+            <div class="worb worb--5">
+                <article class="wcard" data-reveal style="--d:900ms">
+                    <div class="wcard__head">
+                        <span class="wcard__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M3.6 10.6 12 4.2l8.4 6.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.8 12.3v7.4h12.4v-7.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                        <span class="wcard__no">05</span>
+                    </div>
+                    <h3 class="wcard__title">Designed for Real Life</h3>
+                    <p class="wcard__line">Made for bedrooms, living spaces, kitchens, offices, classrooms, cars, and other everyday environments.</p>
+                </article>
+            </div>
+
+            <div class="worb worb--6">
+                <article class="wcard" data-reveal style="--d:1020ms">
+                    <div class="wcard__head">
+                        <span class="wcard__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8.6" r="3.1" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 19.4c0-3 2.5-4.9 5.5-4.9s5.5 1.9 5.5 4.9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M16.1 6.1a2.9 2.9 0 0 1 0 5.5M17.6 14.9c1.9.5 3.2 2 3.2 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+                        <span class="wcard__no">06</span>
+                    </div>
+                    <h3 class="wcard__title">Built for Everyone</h3>
+                    <p class="wcard__line">Designed for the spaces shared by children, families, adults, workers, and older generations.</p>
+                </article>
+            </div>
+
+        </div>
+    </div>
+
+</section>
+
+
+<!-- ═══ HOW AIR AQ WORKS ════════════════════════════════════════════════
+     The whole method on one held screen: the air, the device that reads it,
+     what the reading becomes, and the alert that reaches you. Four stages on
+     one line, and the line is the story — it travels left to right as the
+     section is scrolled and each stage wakes as it is reached.
+
+     The outer box carries the scroll length; the story inside it is one
+     screen tall and sticky, so the section holds while the line crosses and
+     releases the moment it lands. Below 1201px the pin is off and the four
+     stages read straight down the page.
+     ═══════════════════════════════════════════════════════════════════════ -->
+<section class="howto" id="how-it-works">
+    <div class="howto__box">
+        <div class="howto__story">
+
+            <!-- the background film. It lives on the story rather than on the
+                 section because the story is the screen that is held: pinned,
+                 it is exactly what is on screen, so the film covers the whole
+                 view, travels with the pin and adds no height to the run.
+                 Clipped by its own layer — `overflow` on the section itself
+                 would make a scrollport and silently kill the pin. -->
+            <div class="howto__film" aria-hidden="true">
+                <video class="howto__filmEl"
+                       src="assets/video/worckv.mp4"
+                       muted loop playsinline
+                       preload="metadata"
+                       disablepictureinpicture
+                       tabindex="-1"></video>
+            </div>
+
+            <!-- two Glacier washes, the same faint atmosphere the sections
+                 above use. Clipped by their own layer so the sticky pin above
+                 them never sits inside a scrollport. -->
+            <div class="howto__air" aria-hidden="true">
+                <span class="howto__wash howto__wash--a"></span>
+                <span class="howto__wash howto__wash--b"></span>
+            </div>
+
+            <header class="howto__head">
+                <h2 class="howto__title" data-reveal style="--d:60ms">How Air AQ Works</h2>
+                <p class="howto__lead" data-reveal style="--d:160ms">From the air around you to insights you can act on.</p>
+            </header>
+
+            <div class="howto__track">
+
+                <!-- ── 01 · SENSE ───────────────────────────────────────── -->
+                <article class="step" style="--i:0">
+                    <div class="step__stage">
+                        <span class="sense__halo" aria-hidden="true"></span>
+
+                        <!-- the air arriving at the device -->
+                        <div class="sense__air" aria-hidden="true">
+                            <span class="sp" style="--sx:-46%; --sy:-30%; --sd:0s"></span>
+                            <span class="sp" style="--sx:-52%; --sy:  6%; --sd:-1.4s"></span>
+                            <span class="sp" style="--sx:-40%; --sy: 34%; --sd:-2.8s"></span>
+                            <span class="sp" style="--sx:-30%; --sy:-46%; --sd:-4.1s"></span>
+                            <span class="sp" style="--sx: 46%; --sy:-34%; --sd:-.7s"></span>
+                            <span class="sp" style="--sx: 52%; --sy:  2%; --sd:-2.1s"></span>
+                            <span class="sp" style="--sx: 40%; --sy: 36%; --sd:-3.5s"></span>
+                            <span class="sp" style="--sx: 30%; --sy:-48%; --sd:-4.8s"></span>
+                        </div>
+
+                        <!-- the product, drawn from its own silhouette -->
+                        <svg class="hdev" viewBox="0 0 540 492" fill="none" aria-hidden="true">
+                            <defs>
+                                <linearGradient id="hwShell" x1=".05" y1="0" x2=".95" y2="1">
+                                    <stop offset="0%"   stop-color="#FFFFFF"/>
+                                    <stop offset="55%"  stop-color="#F2F9FC"/>
+                                    <stop offset="100%" stop-color="#DCEBF2"/>
+                                </linearGradient>
+                                <linearGradient id="hwPanel" x1=".1" y1="0" x2=".9" y2="1">
+                                    <stop offset="0%"   stop-color="#1E4368"/>
+                                    <stop offset="100%" stop-color="#16324F"/>
+                                </linearGradient>
+                                <linearGradient id="hwLed" x1="0" y1="0" x2="1" y2="0">
+                                    <stop offset="0%"   stop-color="#B9D9E1"/>
+                                    <stop offset="50%"  stop-color="#D6EBF3"/>
+                                    <stop offset="100%" stop-color="#B9D9E1"/>
+                                </linearGradient>
+                            </defs>
+
+                            <path class="hdev__shell"
+                                  d="M49 82.6 L101 36.6 A74 74 0 0 1 150 18 L442 18 A74 74 0 0 1 516 92 L516 354 A74 74 0 0 1 491 409.4 L439 455.4 A74 74 0 0 1 390 474 L98 474 A74 74 0 0 1 24 400 L24 138 A74 74 0 0 1 49 82.6 Z"
+                                  fill="url(#hwShell)" stroke="rgba(22,50,79,.24)" stroke-width="5"/>
+                            <rect class="hdev__panel" x="66" y="116" width="346" height="323" rx="66" fill="url(#hwPanel)"/>
+                            <circle class="hdev__read" cx="239" cy="262" r="74" fill="none" stroke="rgba(185,217,225,.34)" stroke-width="4"/>
+                            <circle class="hdev__read hdev__read--b" cx="239" cy="262" r="46" fill="none" stroke="rgba(185,217,225,.5)" stroke-width="4"/>
+                            <rect class="hdev__led" x="152" y="392" width="174" height="13" rx="6.5" fill="url(#hwLed)"/>
+                        </svg>
+                    </div>
+
+                    <span class="step__rail" aria-hidden="true">
+                        <span class="step__beam"></span>
+                        <span class="step__spark"></span>
+                        <span class="step__stem"></span>
+                        <span class="step__node"></span>
+                    </span>
+
+                    <p class="step__no">01</p>
+                    <h3 class="step__title">Sense</h3>
+                    <p class="step__copy">Built-in sensors continuously monitor the air around you for important changes in indoor air quality.</p>
+                </article>
+
+                <!-- ── 02 · ANALYZE ─────────────────────────────────────── -->
+                <article class="step" style="--i:1">
+                    <div class="step__stage">
+                        <span class="sense__halo" aria-hidden="true"></span>
+
+                        <span class="chip chip--1" aria-hidden="true">CO₂</span>
+                        <span class="chip chip--2" aria-hidden="true">VOCs</span>
+                        <span class="chip chip--3" aria-hidden="true">Air Quality</span>
+                        <span class="chip chip--4" aria-hidden="true">Smoke</span>
+                        <span class="chip chip--5" aria-hidden="true">Gas</span>
+
+                        <!-- the processing mark: rings, a slow sweep and the
+                             readings resolving to one point. No brain, no
+                             robot — just the shape of something converging. -->
+                        <svg class="mind" viewBox="0 0 140 140" fill="none" aria-hidden="true">
+                            <g class="mind__rings" stroke="rgba(22,50,79,.16)" stroke-width="1">
+                                <circle cx="70" cy="70" r="56"/>
+                                <circle cx="70" cy="70" r="40"/>
+                                <circle cx="70" cy="70" r="24"/>
+                            </g>
+                            <g stroke="rgba(22,50,79,.2)" stroke-width="1" stroke-linecap="round">
+                                <path d="M70 30 L70 58"/>
+                                <path d="M104.6 50 L82 64"/>
+                                <path d="M104.6 90 L82 76"/>
+                                <path d="M70 110 L70 82"/>
+                                <path d="M35.4 90 L58 76"/>
+                                <path d="M35.4 50 L58 64"/>
+                            </g>
+                            <g class="mind__pins" fill="#629BB5">
+                                <circle cx="70"    cy="30"  r="3"/>
+                                <circle cx="104.6" cy="50"  r="3"/>
+                                <circle cx="104.6" cy="90"  r="3"/>
+                                <circle cx="70"    cy="110" r="3"/>
+                                <circle cx="35.4"  cy="90"  r="3"/>
+                                <circle cx="35.4"  cy="50"  r="3"/>
+                            </g>
+                            <circle class="mind__sweep" cx="70" cy="70" r="40"
+                                    stroke="#16324F" stroke-width="1.6" stroke-linecap="round"
+                                    stroke-dasharray="34 218"/>
+                            <circle class="mind__core" cx="70" cy="70" r="7" fill="#16324F"/>
+                        </svg>
+                    </div>
+
+                    <span class="step__rail" aria-hidden="true">
+                        <span class="step__beam"></span>
+                        <span class="step__spark"></span>
+                        <span class="step__stem"></span>
+                        <span class="step__node"></span>
+                    </span>
+
+                    <p class="step__no">02</p>
+                    <h3 class="step__title">Analyze</h3>
+                    <p class="step__copy">Air AQ processes sensor readings continuously to identify unusual patterns and changes in your environment.</p>
+                </article>
+
+                <!-- ── 03 · UNDERSTAND ──────────────────────────────────── -->
+                <article class="step" style="--i:2">
+                    <div class="step__stage">
+                        <span class="sense__halo" aria-hidden="true"></span>
+
+                        <!-- what the sensors actually say … -->
+                        <div class="raw" aria-hidden="true">
+                            <span class="raw__row"><span class="raw__k">CO₂</span><span class="raw__v">1180 ppm</span></span>
+                            <span class="raw__row"><span class="raw__k">VOC</span><span class="raw__v">0.42 mg/m³</span></span>
+                            <span class="raw__row"><span class="raw__k">AQI</span><span class="raw__v">78</span></span>
+                        </div>
+
+                        <!-- … and what it means -->
+                        <div class="icard" aria-hidden="true">
+                            <p class="icard__head"><span class="icard__dot"></span>Air Quality Needs Attention</p>
+                            <p class="icard__line">CO₂ levels are rising</p>
+                            <p class="icard__act">
+                                <svg viewBox="0 0 24 24" fill="none"><path d="M4 14.5h8.5a3 3 0 1 0-3-3M4 9.5h6.5M4 19h11a2.6 2.6 0 1 1-2.6 2.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                                Ventilation recommended
+                            </p>
+                        </div>
+                    </div>
+
+                    <span class="step__rail" aria-hidden="true">
+                        <span class="step__beam"></span>
+                        <span class="step__spark"></span>
+                        <span class="step__stem"></span>
+                        <span class="step__node"></span>
+                    </span>
+
+                    <p class="step__no">03</p>
+                    <h3 class="step__title">Understand</h3>
+                    <p class="step__copy">Complex air-quality readings are translated into clear information that is easier to understand.</p>
+                </article>
+
+                <!-- ── 04 · ACT ─────────────────────────────────────────── -->
+                <article class="step" style="--i:3">
+                    <div class="step__stage">
+                        <span class="sense__halo" aria-hidden="true"></span>
+
+                        <div class="hphone" aria-hidden="true">
+                            <div class="hphone__screen">
+                                <span class="hphone__bar"></span>
+                                <div class="hnote">
+                                    <span class="hnote__mark">
+                                        <svg viewBox="0 0 24 24" fill="none"><path d="M4 9h9.5a3 3 0 1 0-3-3M4 14h13a3.2 3.2 0 1 1-3.2 3.2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+                                    </span>
+                                    <span class="hnote__body">
+                                        <span class="hnote__top"><span class="hnote__app">Air AQ Alert</span><span class="hnote__now">now</span></span>
+                                        <span class="hnote__text">Air quality has changed in your room.</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <span class="step__rail" aria-hidden="true">
+                        <span class="step__beam"></span>
+                        <span class="step__spark"></span>
+                        <span class="step__stem"></span>
+                        <span class="step__node"></span>
+                    </span>
+
+                    <p class="step__no">04</p>
+                    <h3 class="step__title">Act</h3>
+                    <p class="step__copy">Receive useful alerts on your phone so you can respond when your indoor environment needs attention.</p>
+                </article>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- ═══ CONTACT ═════════════════════════════════════════════════════════
+     The page's last section, and its way back into the dark. Everything
+     above it since Why Choose Air AQ has been light; this opens on the exact
+     value How Air AQ Works closes on and walks down to Deep Air Blue over a
+     fixed distance, so the join is one colour continuing rather than a line.
+
+     Two columns: what the company is offering to talk about on the left, and
+     the form itself on the right. Nothing here is new furniture — the button
+     is the hero's own primary action, the icon chips are the ones the six
+     benefits wear, and the reveal is the page's own [data-reveal] observer.
+     ══════════════════════════════════════════════════════════════════════ -->
+<section class="contact" id="contact">
+
+    <!-- the air. Three very soft radial washes, two translucent rings and a
+         pair of flow lines — the same atmosphere every section above carries,
+         at the lowest strength any of them use. -->
+    <div class="contact__air" aria-hidden="true">
+        <span class="contact__bloom contact__bloom--a"></span>
+        <span class="contact__bloom contact__bloom--b"></span>
+        <span class="contact__bloom contact__bloom--c"></span>
+
+        <span class="contact__ring contact__ring--a"></span>
+        <span class="contact__ring contact__ring--b"></span>
+
+        <svg class="contact__flow" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" fill="none">
+            <defs>
+                <linearGradient id="cFlow" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0"   stop-color="#B9D9E1" stop-opacity="0"/>
+                    <stop offset=".45" stop-color="#D6EBF3" stop-opacity=".34"/>
+                    <stop offset="1"   stop-color="#B9D9E1" stop-opacity="0"/>
+                </linearGradient>
+            </defs>
+            <path class="cflow" d="M-120 236C170 168 402 300 690 250s470-176 900-96" stroke="url(#cFlow)" stroke-width="1.2"/>
+            <path class="cflow cflow--2" d="M-120 512C210 452 386 590 706 540s498-152 880-62" stroke="url(#cFlow)" stroke-width="1"/>
+            <path class="cflow cflow--3" d="M-120 744C186 690 430 800 726 742s470-130 860-58" stroke="url(#cFlow)" stroke-width="1"/>
+        </svg>
+
+        <!-- the live-air band's own motes, reused as they are -->
+        <div class="contact__motes">
+            <span class="mote" style="--x:8%;  --y:78%; --sz:2.5px; --o:.28; --dx:22px;  --dy:-96px;  --dur:30s; --delay:-4s"></span>
+            <span class="mote" style="--x:17%; --y:34%; --sz:2px;   --o:.2;  --dx:-16px; --dy:-64px;  --dur:34s; --delay:-13s"></span>
+            <span class="mote" style="--x:26%; --y:86%; --sz:3px;   --o:.26; --dx:18px;  --dy:-112px; --dur:28s; --delay:-21s"></span>
+            <span class="mote" style="--x:34%; --y:52%; --sz:2px;   --o:.18; --dx:24px;  --dy:-72px;  --dur:37s; --delay:-8s"></span>
+            <span class="mote" style="--x:44%; --y:24%; --sz:2.5px; --o:.24; --dx:-20px; --dy:-58px;  --dur:32s; --delay:-16s"></span>
+            <span class="mote" style="--x:56%; --y:80%; --sz:2px;   --o:.22; --dx:16px;  --dy:-102px; --dur:26s; --delay:-2s"></span>
+            <span class="mote" style="--x:64%; --y:42%; --sz:3px;   --o:.28; --dx:-22px; --dy:-80px;  --dur:35s; --delay:-24s"></span>
+            <span class="mote" style="--x:76%; --y:70%; --sz:2px;   --o:.2;  --dx:20px;  --dy:-88px;  --dur:29s; --delay:-11s"></span>
+            <span class="mote" style="--x:86%; --y:30%; --sz:2.5px; --o:.24; --dx:-18px; --dy:-66px;  --dur:33s; --delay:-18s"></span>
+            <span class="mote" style="--x:93%; --y:64%; --sz:2px;   --o:.18; --dx:14px;  --dy:-94px;  --dur:38s; --delay:-6s"></span>
+        </div>
+    </div>
+
+    <div class="contact__inner">
+
+        <!-- ── left: what there is to talk about ─────────────────────── -->
+        <div class="contact__intro">
+            <p class="contact__eyebrow" data-reveal>Get in Touch</p>
+            <h2 class="contact__title" data-reveal style="--d:80ms">Let&rsquo;s Talk About Better&nbsp;Air.</h2>
+            <p class="contact__lead" data-reveal style="--d:160ms">Whether you have questions about Air AQ, need product support, or want to explore Air AQ for your home or business, we&rsquo;re here to help.</p>
+
+            <ul class="contact__ways">
+                <li class="cway" data-reveal style="--d:260ms">
+                    <span class="cway__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <rect x="3.4" y="5.6" width="17.2" height="12.8" rx="2.6" stroke="currentColor" stroke-width="1.5"/>
+                            <path d="m4.6 8 7.4 5 7.4-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </span>
+                    <span class="cway__body">
+                        <span class="cway__name">General Enquiries</span>
+                        <span class="cway__line">Questions about Air AQ, how it works, and what it reads.</span>
+                        <a class="cway__link" href="mailto:hello@airaq.com">hello@airaq.com</a>
+                    </span>
+                </li>
+
+                <li class="cway" data-reveal style="--d:340ms">
+                    <span class="cway__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="8.2" stroke="currentColor" stroke-width="1.5"/>
+                            <circle cx="12" cy="12" r="3.3" stroke="currentColor" stroke-width="1.5"/>
+                            <path d="m6.2 6.2 3.4 3.4M17.8 6.2l-3.4 3.4M17.8 17.8l-3.4-3.4M6.2 17.8l3.4-3.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                    </span>
+                    <span class="cway__body">
+                        <span class="cway__name">Product Support</span>
+                        <span class="cway__line">Setup, sensors, alerts and anything your device is doing.</span>
+                        <a class="cway__link" href="mailto:support@airaq.com">support@airaq.com</a>
+                    </span>
+                </li>
+
+                <li class="cway" data-reveal style="--d:420ms">
+                    <span class="cway__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <rect x="3.4" y="7.4" width="17.2" height="11.6" rx="2.6" stroke="currentColor" stroke-width="1.5"/>
+                            <path d="M9 7.4V6.2A1.8 1.8 0 0 1 10.8 4.4h2.4A1.8 1.8 0 0 1 15 6.2v1.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            <path d="M3.4 12.4h17.2" stroke="currentColor" stroke-width="1.5"/>
+                        </svg>
+                    </span>
+                    <span class="cway__body">
+                        <span class="cway__name">Business &amp; Partnerships</span>
+                        <span class="cway__line">Air AQ across offices, buildings, fleets and retail.</span>
+                        <a class="cway__link" href="mailto:partners@airaq.com">partners@airaq.com</a>
+                    </span>
+                </li>
+            </ul>
+
+            <p class="contact__trust" data-reveal style="--d:500ms">
+                <span class="contact__trust-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M12 3.2 19 6v5.4c0 4.3-2.9 7.6-7 9.4-4.1-1.8-7-5.1-7-9.4V6l7-2.8Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                        <path d="m9 12 2.2 2.2L15.4 10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                Your questions matter. Our team will get back to you as soon as possible.
+            </p>
+        </div>
+
+        <!-- ── right: the form ───────────────────────────────────────── -->
+        <div class="contact__panel" data-reveal style="--d:220ms">
+            <form class="cform" novalidate>
+
+                <div class="cform__row">
+                    <p class="cfield">
+                        <label class="cfield__label" for="cf-name">Full Name</label>
+                        <input class="cfield__input" id="cf-name" name="name" type="text"
+                               autocomplete="name" placeholder="Your full name">
+                    </p>
+                    <p class="cfield">
+                        <label class="cfield__label" for="cf-email">Email Address</label>
+                        <input class="cfield__input" id="cf-email" name="email" type="email"
+                               autocomplete="email" placeholder="you@example.com">
+                    </p>
+                </div>
+
+                <div class="cform__row">
+                    <p class="cfield">
+                        <label class="cfield__label" for="cf-phone">Phone Number</label>
+                        <input class="cfield__input" id="cf-phone" name="phone" type="tel"
+                               autocomplete="tel" placeholder="+1 555 000 0000">
+                    </p>
+                    <p class="cfield">
+                        <label class="cfield__label" for="cf-subject">Subject</label>
+                        <input class="cfield__input" id="cf-subject" name="subject" type="text"
+                               placeholder="What is this about?">
+                    </p>
+                </div>
+
+                <p class="cfield">
+                    <label class="cfield__label" for="cf-message">Message</label>
+                    <textarea class="cfield__input cfield__input--area" id="cf-message" name="message"
+                              rows="6" placeholder="Tell us a little about what you need."></textarea>
+                </p>
+
+                <button class="btn btn--primary cform__send" type="submit">
+                    Send Message
+                    <svg class="btn__arrow" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <path d="M4 10h11m0 0-4.2-4.2M15 10l-4.2 4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </form>
+        </div>
+
+    </div>
+</section>
+
+<!-- ═══ FOOTER ══════════════════════════════════════════════════════════
+     The page's ending, and the last of one continuous surface. The contact
+     section closes on --deep-800; this opens on that exact value and keeps
+     going down to --deep-900, so there is no join to see — no rule, no gap,
+     no change of width, and no curved edge.
+
+     Everything in here is already on the page: the mark is the navigation's
+     own .brand, the field is the contact form's own input, the action is the
+     hero's primary button at a compact size, and the particles are the
+     live-air band's motes. What is new is the grid and the hover.
+     ══════════════════════════════════════════════════════════════════════ -->
+<footer class="foot">
+
+    <!-- one glow, two curves, six motes — held well under the type -->
+    <div class="foot__air" aria-hidden="true">
+        <span class="foot__glow"></span>
+
+        <svg class="foot__flow" viewBox="0 0 1440 480" preserveAspectRatio="xMidYMid slice" fill="none">
+            <defs>
+                <linearGradient id="fFlow" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0"   stop-color="#B9D9E1" stop-opacity="0"/>
+                    <stop offset=".5"  stop-color="#D6EBF3" stop-opacity=".22"/>
+                    <stop offset="1"   stop-color="#B9D9E1" stop-opacity="0"/>
+                </linearGradient>
+            </defs>
+            <path class="fflow" d="M-120 128C200 74 430 190 720 146s486-142 860-74" stroke="url(#fFlow)" stroke-width="1"/>
+            <path class="fflow fflow--2" d="M-120 336C214 286 446 400 738 350s470-118 850-56" stroke="url(#fFlow)" stroke-width="1"/>
+        </svg>
+
+        <div class="foot__motes">
+            <span class="mote" style="--x:11%; --y:74%; --sz:2px;   --o:.2;  --dx:18px;  --dy:-70px; --dur:34s; --delay:-5s"></span>
+            <span class="mote" style="--x:27%; --y:36%; --sz:2.5px; --o:.16; --dx:-14px; --dy:-52px; --dur:39s; --delay:-17s"></span>
+            <span class="mote" style="--x:46%; --y:82%; --sz:2px;   --o:.18; --dx:20px;  --dy:-84px; --dur:31s; --delay:-9s"></span>
+            <span class="mote" style="--x:63%; --y:28%; --sz:2px;   --o:.14; --dx:-16px; --dy:-46px; --dur:42s; --delay:-24s"></span>
+            <span class="mote" style="--x:79%; --y:66%; --sz:2.5px; --o:.2;  --dx:14px;  --dy:-76px; --dur:36s; --delay:-13s"></span>
+            <span class="mote" style="--x:92%; --y:44%; --sz:2px;   --o:.15; --dx:-18px; --dy:-58px; --dur:44s; --delay:-2s"></span>
+        </div>
+    </div>
+
+    <div class="foot__inner">
+
+        <div class="foot__grid">
+
+            <!-- ── 1 · the brand ─────────────────────────────────────── -->
+            <div class="foot__brand" data-reveal>
+                <a class="brand" href="#">
+                    <span class="brand__mark" aria-hidden="true">
+                        <svg viewBox="0 0 32 32" fill="none">
+                            <circle cx="16" cy="16" r="15" stroke="currentColor" stroke-opacity=".45"/>
+                            <path d="M6 13.5h11a3.5 3.5 0 1 0-3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                            <path d="M6 19h14a3.5 3.5 0 1 1-3.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        </svg>
+                    </span>
+                    <span class="brand__name">Air<span>AQ</span></span>
+                </a>
+
+                <p class="foot__statement">Know the Air You Breathe. Protect What&nbsp;Matters.</p>
+                <p class="foot__note">Air AQ continuously monitors your indoor environment and turns air-quality data into clear insights you can understand and act on.</p>
+
+                <!-- PLACEHOLDER: no accounts are wired up yet. Point each href
+                     at the real profile — or delete the ones that never exist. -->
+                <ul class="fsocial">
+                    <li><a href="#" aria-label="Air AQ on LinkedIn">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <rect x="3.5" y="3.5" width="17" height="17" rx="3.4" stroke="currentColor" stroke-width="1.5"/>
+                            <path d="M7.6 10.2v6.2M7.6 7.6v.1M11.6 16.4v-6.2m0 2.2a2.4 2.4 0 0 1 4.8 0v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                    </a></li>
+                    <li><a href="#" aria-label="Air AQ on X">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <rect x="3.5" y="3.5" width="17" height="17" rx="3.4" stroke="currentColor" stroke-width="1.5"/>
+                            <path d="m8 8 8 8M16 8l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                    </a></li>
+                    <li><a href="#" aria-label="Air AQ on YouTube">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <rect x="2.8" y="5.6" width="18.4" height="12.8" rx="3.6" stroke="currentColor" stroke-width="1.5"/>
+                            <path d="M10.6 9.6 15 12l-4.4 2.4V9.6Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                        </svg>
+                    </a></li>
+                </ul>
+            </div>
+
+            <!-- ── 2 · explore ───────────────────────────────────────── -->
+            <nav class="fcol" data-reveal style="--d:120ms" aria-label="Explore">
+                <h2 class="fcol__title">Explore</h2>
+                <ul class="fcol__list">
+                    <li><a href="#product-showcase">Product</a></li>
+                    <li><a href="#air-data">Technology</a></li>
+                    <li><a href="#trust">Air Science</a></li>
+                    <li><a href="#how-it-works">How It Works</a></li>
+                    <li><a href="#why-air-aq">Why Air AQ</a></li>
+                </ul>
+            </nav>
+
+            <!-- ── 3 · support ───────────────────────────────────────── -->
+            <nav class="fcol" data-reveal style="--d:200ms" aria-label="Support">
+                <h2 class="fcol__title">Support</h2>
+                <ul class="fcol__list">
+                    <li><a href="#contact">Contact Us</a></li>
+                    <li><a href="mailto:support@airaq.com">Product Support</a></li>
+                    <li><a href="#">FAQs</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms &amp; Conditions</a></li>
+                </ul>
+            </nav>
+
+            <!-- ── 4 · stay connected ────────────────────────────────── -->
+            <div class="fcol foot__news" data-reveal style="--d:280ms">
+                <h2 class="fcol__title">Stay Connected</h2>
+                <p class="foot__news-line">Get Air AQ updates, indoor air-quality insights, and product news.</p>
+
+                <form class="fnews" novalidate>
+                    <label class="fnews__label" for="foot-email">Email address</label>
+                    <div class="fnews__field">
+                        <input class="cfield__input fnews__input" id="foot-email" name="email"
+                               type="email" autocomplete="email" placeholder="you@example.com">
+                        <button class="btn btn--primary fnews__send" type="submit">
+                            Subscribe
+                            <svg class="btn__arrow" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                <path d="M4 10h11m0 0-4.2-4.2M15 10l-4.2 4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+
+        <!-- ── the bottom bar ────────────────────────────────────────── -->
+        <div class="foot__bar">
+            <p class="foot__copy">&copy; 2026 Air AQ. All rights reserved.</p>
+            <p class="foot__legal">
+                <a href="#">Privacy Policy</a>
+                <span aria-hidden="true">&middot;</span>
+                <a href="#">Terms &amp; Conditions</a>
+            </p>
+        </div>
+
+    </div>
+</footer>
+
+<!-- ══ BACK TO TOP ═══════════════════════════════════════════════════════════
+     Hidden until the page has scrolled a screen's worth, then it rides the
+     bottom-right corner. Nothing depends on it: with the script absent it is
+     never shown, so it can never sit there doing nothing.
+     ═══════════════════════════════════════════════════════════════════════ -->
+<button class="totop" id="to-top" type="button" aria-label="Back to top" hidden>
+    <svg class="totop__arrow" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <path d="M10 15.5V5m0 0 4.4 4.4M10 5 5.6 9.4" stroke="currentColor"
+              stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+</button>
+
+</body>
+</html>
