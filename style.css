@@ -3440,7 +3440,7 @@ img, picture, video, canvas {
     /* the scroll the pin runs on: one screen to hold, and a stretch for each
        slide to arrive and be read in */
     .js-hstory .assure {
-        height: calc(100svh + 4 * 42svh);
+        height: calc(100svh + 4 * 36svh);
         padding: 0;
     }
 
@@ -4332,7 +4332,7 @@ img, picture, video, canvas {
     font-size: clamp(2.1rem, 3.5vw, 3.15rem);
     line-height: 1.08;
     letter-spacing: -.035em;
-    color: var(--deep);
+    color: var(--ice-blue);
     text-wrap: balance;
 }
 
@@ -4341,7 +4341,8 @@ img, picture, video, canvas {
     max-width: 34rem;
     font-size: clamp(1rem, 1.1vw, 1.08rem);
     line-height: 1.7;
-    color: var(--ink-70);
+    font-weight: 600;
+    color: var(--ice-blue);
     text-wrap: pretty;
 }
 
@@ -4498,22 +4499,22 @@ img, picture, video, canvas {
     margin: 1.1rem 0 .5rem;
     font-family: var(--font-display);
     font-size: .78rem;
-    font-weight: 700;
+    font-weight: 800;
     letter-spacing: .18em;
-    color: var(--ink-50);
+    color: var(--ice-blue);
     transition: color .6s var(--ease);
 }
 
-.step.is-live .step__no { color: var(--turquoise); }
+.step.is-live .step__no { color: var(--ice-blue); }
 
 .step__title {
     margin: 0 0 .6rem;
     font-family: var(--font-display);
     font-size: clamp(1.15rem, 1.5vw, 1.4rem);
-    font-weight: 700;
+    font-weight: 800;
     letter-spacing: -.025em;
     line-height: 1.15;
-    color: var(--deep);
+    color: var(--ice-blue);
 }
 
 .step__copy {
@@ -4521,8 +4522,22 @@ img, picture, video, canvas {
     max-width: 22rem;
     font-size: clamp(.82rem, .95vw, .9rem);
     line-height: 1.65;
-    color: var(--ink-70);
+    font-weight: 600;
+    color: var(--ice-blue);
     text-wrap: pretty;
+}
+
+/* the text sits straight on the film, which is light in places: a soft,
+   close Deep Air Blue shadow gives every line an edge to stand on without
+   reading as an outline or a glow */
+.howto__title,
+.howto__lead,
+.step__no,
+.step__title,
+.step__copy,
+.raw__k,
+.raw__v {
+    text-shadow: 0 1px 2px rgba(10, 28, 46, .45), 0 2px 14px rgba(10, 28, 46, .35);
 }
 
 /* the stage and its words wait for the line to reach them. Armed by the
@@ -4743,8 +4758,8 @@ img, picture, video, canvas {
     font-variant-numeric: tabular-nums;
 }
 
-.raw__k { font-weight: 700; letter-spacing: .08em; color: var(--ink-50); }
-.raw__v { font-weight: 600; color: var(--deep); }
+.raw__k { font-weight: 700; letter-spacing: .08em; color: var(--ice-blue); }
+.raw__v { font-weight: 700; color: var(--ice-blue); }
 
 .icard {
     width: 96%;
@@ -4930,7 +4945,7 @@ img, picture, video, canvas {
     .howto__box {
         /* four stages, and a little at each end so the section arrives and
            leaves without the line still moving */
-        --how-run: 250svh;
+        --how-run: 400svh;
         height: calc(100svh + var(--how-run));
     }
 
@@ -5194,6 +5209,49 @@ img, picture, video, canvas {
     background-position:
         0 0,
         0 calc(var(--contact-fade) - 1px);
+}
+
+/* --- the photograph ----------------------------------------------------------
+   contact.jpg, the Air AQ on a desk in a blue-lit room, across the whole
+   section: `cover`, so it fills any shape the section takes without being
+   stretched, and anchored right of centre so the product stays in frame as
+   narrow screens crop the sides away.
+
+   Three layers over it, in one element:
+   · a Deep Air Blue veil, heaviest on the left where the words are and
+     lighter where the product sits, so the type keeps its contrast and the
+     picture reads in the section's own colour rather than its own;
+   · the footer's opening tone over the last 200px, so the join below is the
+     ramp alone, exactly as before.
+   And a mask at the top, so the picture comes in through the second half of
+   the light-to-navy fade instead of cutting across it.
+   -------------------------------------------------------------------------- */
+
+.contact::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+    background-image:
+        linear-gradient(180deg, rgba(16, 38, 64, 0) calc(100% - 200px), #102640 100%),
+        linear-gradient(90deg, rgba(22, 50, 79, .66) 0%, rgba(22, 50, 79, .5) 45%, rgba(22, 50, 79, .32) 100%),
+        url("assets/image/contact.jpg");
+    background-size: 100% 100%, 100% 100%, cover;
+    background-position: 0 0, 0 0, 68% center;
+    background-repeat: no-repeat;
+    -webkit-mask-image: linear-gradient(180deg, transparent calc(var(--contact-fade) * .45), #000 var(--contact-fade));
+            mask-image: linear-gradient(180deg, transparent calc(var(--contact-fade) * .45), #000 var(--contact-fade));
+}
+
+@media (max-width: 767px) {
+    /* a narrow column of type over the whole width: the veil evens out */
+    .contact::before {
+        background-image:
+            linear-gradient(180deg, rgba(16, 38, 64, 0) calc(100% - 200px), #102640 100%),
+            linear-gradient(90deg, rgba(22, 50, 79, .6) 0%, rgba(22, 50, 79, .6) 100%),
+            url("assets/image/contact.jpg");
+    }
 }
 
 /* --- the air ---------------------------------------------------------------
@@ -5641,6 +5699,68 @@ img, picture, video, canvas {
 
     .cfield__input { padding: .8rem .9rem; border-radius: 12px; }
     .contact__trust { padding: .85rem .95rem; font-size: .85rem; }
+}
+
+/* --- one screen -------------------------------------------------------------
+   The section is sized to the screen it is read on rather than to a stack of
+   fixed allowances. It is at least one viewport tall and its content sits in
+   the middle of the dark part — so a tall screen gets the form centred, not
+   a band of empty navy under it — and every allowance that used to be in vw
+   (which grows with the width while the height stays the same) is in svh,
+   so a short laptop screen tightens the vertical rhythm instead of pushing
+   the section past the fold.
+
+   The light-to-navy fade shortens with it. It is still the same eased ramp
+   and still sets the top padding, so the first line of type always clears
+   the last of the light; it just no longer spends a third of a screen doing
+   it. Only heights and spacing are touched here: nothing moves sideways, and
+   the photograph, the washes and the columns are exactly as they were.
+   -------------------------------------------------------------------------- */
+
+.contact {
+    /* no fade: How It Works ends on a straight edge and this opens on its
+       own Deep Air Blue and photograph from the first pixel. At zero the
+       ramp out of the light has no height, and the photograph's and the
+       washes' masks — both measured against it — are fully opaque from the
+       top, so the one variable turns the whole transition off. */
+    --contact-fade: 0px;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: clamp(3rem, 8svh, 5.5rem) 0 clamp(2rem, 6svh, 4.5rem);
+}
+
+/* a flex item no longer stretches to the width by default — the inner keeps
+   the width it was already given, centred */
+.contact__inner { width: var(--shell); }
+
+.contact__eyebrow { margin-bottom: clamp(.7rem, 1.6svh, 1.15rem); }
+.contact__title   { margin-bottom: clamp(.8rem, 2svh, 1.35rem); }
+.contact__lead    { margin-bottom: clamp(1.1rem, 3.2svh, 3rem); }
+.contact__ways    { margin-bottom: clamp(1rem, 2.8svh, 2.5rem); }
+.cway             { padding-block: clamp(.7rem, 1.7svh, 1.35rem); }
+.cway:first-child { padding-top: 0; }
+
+.contact__panel { padding: clamp(1.15rem, 3svh, 2.35rem) clamp(1.25rem, 2.6vw, 2.35rem); }
+.cform,
+.cform__row     { gap: clamp(.75rem, 1.9svh, 1.3rem); }
+.cfield__input--area { min-height: clamp(96px, 14svh, 190px); }
+
+@media (max-width: 767px) {
+    /* stacked: the content is taller than a phone screen, so the section is
+       exactly as tall as its content plus a shorter fade and trimmer ends */
+    .contact {
+        --contact-fade: 0px;
+        padding-top: clamp(3rem, 12vw, 4.5rem);
+        padding-bottom: clamp(2.25rem, 8vw, 3.5rem);
+    }
+}
+
+@media (max-width: 640px) {
+    .cfield__input--area { min-height: 120px; }
+    /* the panel's side padding stays what the phone layout already gave it */
+    .contact__panel { padding: clamp(1.15rem, 5vw, 1.5rem); }
 }
 
 /* --- motion turned down ----------------------------------------------------
@@ -6862,4 +6982,331 @@ body.is-loaded .hero__stage { animation-delay: .1s; }
 
 .hero__stage .fcard::before {
     background: none !important;
+}
+
+/* ==========================================================================
+   RESPONSIVE POLISH
+   Fixes found by measuring the page at 1920, 1440, 1280, 1024, 820, 768, 414,
+   390 and 360 wide. Nothing here changes a colour, a piece of content, an
+   animation or a background — only how things sit at a given size.
+   ========================================================================== */
+
+/* --- How Air AQ Works, stacked: the film is one screen, held ---------------
+   On the wide layout the story is pinned, so the film is always one screen
+   of 16:9 video. Below 1200px there is no pin and the film was stretched over
+   the whole stacked section, ~1700px of it — `cover` then blew a 720p frame
+   up several times over, so what showed behind the words was a soft crop of
+   the wall, and the Ice Blue type sat on near-white.
+
+   Here the film is a sticky layer one screen tall that rides with the reader
+   through the section: the same framing the wide layout has, the same scrub
+   (the script already maps this layout from the section's top reaching the
+   screen's top to its bottom reaching the screen's bottom — which is exactly
+   the span this layer is held for), and the content scrolls over it. The
+   story's padding moves into two spacers so the held film reaches both of
+   the section's edges: a sticky box is kept inside its container's content
+   box, and padding would leave a band of bare ground at each end. */
+@media (max-width: 1200px) {
+    .howto__story {
+        --how-pt: clamp(2.5rem, 6vw, 5.5rem);
+        --how-pb: clamp(3rem, 6vw, 5.5rem);
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+
+    .howto__story::before,
+    .howto__story::after {
+        content: "";
+        flex: none;
+        height: var(--how-pt);
+    }
+
+    .howto__story::before { order: -1; }
+    .howto__story::after  { height: var(--how-pb); }
+
+    .howto__film {
+        position: sticky;
+        inset: auto;
+        top: 0;
+        order: -2;
+        flex: none;
+        height: 100vh;
+        height: 100svh;
+        margin-bottom: -100vh;
+        margin-bottom: -100svh;
+    }
+}
+
+@media (max-width: 767px) {
+    .howto__story {
+        --how-pt: clamp(2rem, 8vw, 3.25rem);
+        --how-pb: clamp(2.25rem, 8vw, 3.5rem);
+    }
+
+    /* the one chip that reached past the screen's left edge */
+    .chip--2 { left: 0; }
+}
+
+/* --- labels that had shrunk below reading size on phones ------------------
+   Uppercase micro-labels were going down to 7-9px. Each is brought back to a
+   size that reads on a phone, with the space it has measured first: the hero
+   readings are two to a row here, the live-air row wraps its captions, and
+   the product cards have room for one more pixel or two. */
+@media (max-width: 767px) {
+    .fcard__label { font-size: .6rem; }
+    .showcase .scard__desc { font-size: .64rem; line-height: 1.3; }
+}
+
+@media (max-width: 480px) {
+    .anode__label { font-size: clamp(.54rem, 2.3vw, .62rem); letter-spacing: .03em; }
+}
+
+/* --- footer ------------------------------------------------------------------
+   On a phone the two link lists sat one above the other — ten short links in
+   a single column, most of a screen of footer. They go side by side, with the
+   brand above and the newsletter below still full width. */
+@media (max-width: 640px) {
+    .foot__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: clamp(1rem, 5vw, 1.75rem); }
+    .foot__brand,
+    .foot__news { grid-column: 1 / -1; }
+}
+
+/* the back-to-top button is fixed in the bottom-right corner, and on tablet
+   and phone it sat on top of the legal links at the very end of the page.
+   The bar keeps clear of it. */
+@media (max-width: 1023px) {
+    .foot__bar { padding-right: 64px; }
+}
+
+@media (max-width: 640px) {
+    .foot__bar { padding-right: 0; padding-bottom: 64px; }
+}
+
+/* ==========================================================================
+   COMPACT TABLET & PHONE
+   Measured at 768 and 390 wide. The desktop layout is untouched — every rule
+   here is inside a max-width query. What it does: one heading scale for the
+   section titles (the product heading was the largest type on the page on a
+   phone, larger than the hero's own, and ran to four lines), leads a touch
+   smaller, and the gaps that were sized for a desktop — between stacked
+   steps, around the Why Air AQ cards, above and below sections — brought to
+   what the content needs. Spacing is reduced, never removed.
+   ========================================================================== */
+
+/* --- tablet ----------------------------------------------------------------- */
+@media (max-width: 1200px) {
+    .phead__title,
+    .reel__title,
+    .whyaq__title,
+    .howto__title,
+    .contact__title { font-size: clamp(1.9rem, 4.3vw, 2.35rem); }
+
+    /* the stacked steps and the connector that runs between them */
+    .howto__track { row-gap: clamp(2.25rem, 5vw, 3rem); }
+    .step:not(:last-child)::after { height: clamp(2.25rem, 5vw, 3rem); }
+}
+
+@media (max-width: 1080px) {
+    /* Why Air AQ once it has become a grid: the ends and the gaps between
+       the six were still the desktop orbit's */
+    .whyaq { padding: calc(clamp(3rem, 7vw, 4rem) + var(--whyaq-pull)) 0 clamp(3rem, 7vw, 4rem); }
+    .orbit {
+        margin-top: clamp(2rem, 5vw, 2.75rem);
+        gap: clamp(1.6rem, 4vw, 2.25rem) clamp(1.75rem, 4.5vw, 3rem);
+    }
+    .orbit__core { margin-bottom: clamp(.75rem, 2.5vw, 1.5rem); }
+}
+
+/* --- phone ------------------------------------------------------------------ */
+@media (max-width: 640px) {
+    /* headings: still the largest thing in each section, the hero still the
+       largest on the page */
+    .hero__title { font-size: clamp(1.9rem, 8.4vw, 2.2rem); }
+
+    .phead__title,
+    .reel__title,
+    .whyaq__title,
+    .howto__title,
+    .contact__title {
+        font-size: clamp(1.6rem, 7vw, 1.95rem);
+        margin-bottom: .85rem;
+    }
+
+    .whyaq__eyebrow,
+    .contact__eyebrow { margin-bottom: .7rem; }
+
+    /* leads: a step below 16px, and the space under them a little less */
+    .hero__desc,
+    .phead__lead,
+    .whyaq__lead,
+    .howto__lead,
+    .contact__lead {
+        font-size: .95rem;
+        line-height: 1.6;
+    }
+
+    .hero__desc    { margin-bottom: 1.4rem; }
+    .phead__lead   { margin-bottom: 1.25rem; }
+    .contact__lead { margin-bottom: 1.35rem; }
+
+    /* section ends */
+    .product { padding: 2rem 0 2.5rem; }
+    .whyaq   { padding: calc(2.75rem + var(--whyaq-pull)) 0 2.5rem; }
+    .orbit   { margin-top: 1.75rem; row-gap: 1.35rem; }
+
+    .howto__track { row-gap: 2rem; }
+    .step:not(:last-child)::after { height: 2rem; }
+    .howto__head  { margin-bottom: 1.25rem; }
+}
+
+/* ==========================================================================
+   SCROLL ON TOUCH SCREENS
+   -------------------------------------------------------------------------- */
+
+/* The live-air row's last connector reaches past its column, and on tablet
+   and phone that overhang was wider than the shell's margin: the page became
+   ~110px wider than the screen, so a tablet could be dragged sideways and a
+   phone zoomed out to fit it. Clipped on this section, horizontally only —
+   `clip`, not `hidden`, so it is not a scroll container and nothing in it
+   changes vertically. */
+.airdata { overflow-x: clip; }
+
+/* and one net under the whole page, for anything drawn wider on purpose in
+   future: the document never scrolls sideways. `clip` on the root is the
+   viewport's own overflow, so the sticky pins further down are unaffected. */
+html { overflow-x: clip; }
+
+/* ==========================================================================
+   HOW AIR AQ WORKS — THE FILM AT EVERY SCREEN SHAPE
+   The film is always exactly one screen: pinned on the wide layout, and a
+   held one-screen layer on the stacked ones. `cover` then does the sizing
+   from the screen's own width and height — scaled until the 16:9 frame fills
+   it, never stretched — so a landscape laptop loses a sliver top and bottom,
+   a 4:3 tablet a little of each side, and a portrait phone keeps the middle
+   of the frame. What it keeps is chosen here: every beat of the film — the
+   house, the room, the AI core, the product at the end — is centred across
+   and sits a touch below the middle, so the crop is anchored there instead of
+   dead centre, and on a narrow portrait screen the subject is what remains.
+
+   The scrub distance follows the same screen: 400svh of pin on the wide
+   layout, and on the stacked ones exactly the section's own height less one
+   screen — measured by the script, so it grows and shrinks with the content
+   and there is no scroll in it that is not also film.
+   ========================================================================== */
+
+.howto__filmEl { object-position: 50% 55%; }
+
+@media (max-width: 1200px) {
+    /* the large viewport, not the small one: when a phone's toolbars slide
+       away the visible screen grows, and a layer sized to the small height
+       left a band of bare ground along the bottom. Sized to the large one it
+       always reaches the bottom edge — with the toolbars showing, the extra
+       is simply under them. */
+    .howto__film {
+        height: 100vh;
+        height: 100lvh;
+        margin-bottom: -100vh;
+        margin-bottom: -100lvh;
+    }
+}
+
+/* ==========================================================================
+   WHATSAPP
+   The official glyph on WhatsApp's own green, as a single disc in the
+   bottom-right corner — the one mark on the page in a colour that is not
+   Air AQ's, which is the point: it is recognised at a glance. Everything
+   around the green is the page's: the same edge distance and depth of shadow
+   as the back-to-top button, the same easing, a hairline of light on the rim.
+
+   The back-to-top button now sits directly above it, one gap up, and drops
+   back into the corner whenever this steps away.
+   ========================================================================== */
+
+:root {
+    --wa-size: 3.5rem;
+    --fab-edge: clamp(1rem, 3vw, 2.25rem);
+}
+
+.wa {
+    position: fixed;
+    right: var(--fab-edge);
+    bottom: var(--fab-edge);
+    z-index: 35;                          /* with the back-to-top, under the nav */
+    display: grid;
+    place-items: center;
+    width: var(--wa-size);
+    height: var(--wa-size);
+    border-radius: 50%;
+    color: #fff;
+    background: #25D366;
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, .22),
+        0 10px 24px -8px rgba(8, 25, 43, .45),
+        0 2px 6px rgba(8, 25, 43, .18);
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+        transform .45s var(--ease),
+        box-shadow .45s var(--ease),
+        opacity .35s var(--ease),
+        visibility 0s linear 0s;
+}
+
+.wa__icon {
+    width: 56%;
+    height: 56%;
+    display: block;
+}
+
+.wa:focus-visible {
+    outline: 2px solid var(--ice);
+    outline-offset: 3px;
+}
+
+/* stepping away from a form: down and out, and not clickable while gone */
+.wa.is-away {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(12px) scale(.92);
+    pointer-events: none;
+    transition:
+        transform .45s var(--ease),
+        opacity .3s var(--ease),
+        visibility 0s linear .45s;
+}
+
+/* a pointer that hovers: a two-pixel lift and a slightly deeper shadow —
+   nothing that moves on its own */
+@media (hover: hover) and (pointer: fine) {
+    .wa:hover {
+        transform: translateY(-2px);
+        box-shadow:
+            inset 0 0 0 1px rgba(255, 255, 255, .28),
+            0 16px 30px -10px rgba(8, 25, 43, .5),
+            0 3px 8px rgba(8, 25, 43, .2);
+    }
+}
+
+.wa:active { transform: translateY(0) scale(.97); }
+
+/* the back-to-top button, one gap above it — and back to the corner when the
+   WhatsApp button has stepped away */
+.totop {
+    bottom: calc(var(--fab-edge) + var(--wa-size) + .75rem);
+    transition: opacity .34s var(--ease), transform .34s var(--ease),
+                background .28s var(--ease), border-color .28s var(--ease),
+                bottom .45s var(--ease);
+}
+
+body.wa-away .totop { bottom: var(--fab-edge); }
+
+@media (max-width: 640px) {
+    :root { --wa-size: 3.1rem; }
+    .totop { bottom: calc(var(--fab-edge) + var(--wa-size) + .6rem); }
+    body.wa-away .totop { bottom: var(--fab-edge); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .wa, .wa.is-away { transition: none; }
+    .wa:hover { transform: none; }
 }

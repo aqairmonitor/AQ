@@ -1228,9 +1228,9 @@
                  would make a scrollport and silently kill the pin. -->
             <div class="howto__film" aria-hidden="true">
                 <video class="howto__filmEl"
-                       src="assets/video/new-video-scrub.mp4"
+                       src="assets/video/new-video-scrub-720.mp4"
                        muted playsinline
-                       preload="auto"
+                       preload="metadata"
                        disablepictureinpicture
                        tabindex="-1"></video>
             </div>
@@ -1438,10 +1438,10 @@
 
 
 <!-- ═══ CONTACT ═════════════════════════════════════════════════════════
-     The page's last section, and its way back into the dark. Everything
-     above it since Why Choose Air AQ has been light; this opens on the exact
-     value How Air AQ Works closes on and walks down to Deep Air Blue over a
-     fixed distance, so the join is one colour continuing rather than a line.
+     The page's last section, and its way back into the dark. It starts on a
+     clean, straight break: How Air AQ Works ends on the edge of its film and
+     this opens directly on its own Deep Air Blue and photograph — no fade
+     between the two.
 
      Two columns: what the company is offering to talk about on the left, and
      the form itself on the right. Nothing here is new furniture — the button
@@ -1755,6 +1755,23 @@
               stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
 </button>
+
+<!-- WhatsApp — a direct line to the business, fixed in the bottom-right
+     corner. The number is the one setting: put it in data-wa-number with the
+     country code (digits only, or with + and spaces — the script strips them),
+     e.g. data-wa-number="+91 98765 43210". data-wa-text is the message the
+     chat opens with. Until a number is set the link opens WhatsApp without a
+     recipient, so it never points at a number that is not the business's. -->
+<a class="wa" id="wa-chat"
+   href="https://wa.me/"
+   data-wa-number=""
+   data-wa-text="Hi Air AQ, I'd like to know more about Air AQ."
+   target="_blank" rel="noopener"
+   aria-label="Chat with Air AQ on WhatsApp">
+    <svg class="wa__icon" viewBox="0 0 32 32" aria-hidden="true">
+        <path fill="currentColor" d="M16.004 3.2C8.94 3.2 3.2 8.938 3.2 16c0 2.26.593 4.466 1.72 6.41L3.2 28.8l6.57-1.69A12.77 12.77 0 0 0 16.004 28.8C23.066 28.8 28.8 23.062 28.8 16S23.066 3.2 16.004 3.2Zm0 23.43c-1.93 0-3.82-.52-5.47-1.5l-.39-.23-3.9 1.004 1.04-3.8-.255-.4A10.56 10.56 0 0 1 5.4 16c0-5.85 4.76-10.61 10.604-10.61 5.846 0 10.6 4.76 10.6 10.61 0 5.85-4.754 10.63-10.6 10.63Zm5.81-7.95c-.318-.16-1.884-.93-2.176-1.036-.292-.106-.504-.16-.716.16-.213.318-.822 1.036-1.008 1.248-.186.213-.371.24-.689.08-.318-.16-1.344-.495-2.56-1.58-.946-.845-1.585-1.888-1.77-2.207-.186-.318-.02-.49.14-.649.143-.142.318-.371.477-.557.16-.186.212-.318.318-.531.106-.212.053-.398-.026-.557-.08-.16-.716-1.726-.981-2.363-.258-.62-.52-.536-.716-.546-.186-.009-.398-.011-.61-.011a1.17 1.17 0 0 0-.849.398c-.292.318-1.114 1.088-1.114 2.654 0 1.566 1.14 3.08 1.3 3.292.159.212 2.245 3.43 5.44 4.81.76.328 1.353.524 1.815.67.763.243 1.457.209 2.006.127.612-.091 1.884-.77 2.15-1.513.265-.743.265-1.38.186-1.513-.08-.133-.292-.212-.61-.371Z"/>
+    </svg>
+</a>
 
 </body>
 </html>

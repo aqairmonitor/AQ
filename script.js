@@ -99,6 +99,7 @@
     /* work that must run once per frame, after Lenis has moved the page —
        run by Lenis's own loop so nothing competes with it */
     var frameHooks = [];
+    var scrollGate = null;
 
     if (!reduce && typeof window.Lenis === 'function') {
         var lenis = new window.Lenis({
@@ -112,6 +113,8 @@
                makes a long scrubbed run feel deliberate instead of flicked */
             wheelMultiplier: 0.75,
             touchMultiplier: 1,
+            /* a section can ask to hold the wheel for a moment — see 8b */
+            virtualScroll: function (d) { return scrollGate ? scrollGate(d) : true; },
             /* touch stays native: a drag should track the finger exactly,
                and the carousel is dragged inside it */
             syncTouch: false
@@ -970,29 +973,55 @@
     /* ── 8. the how-it-works film ─────────────────────────────────────────
        The film never plays on its own clock: its position is the scroll.
        Across the pinned run (wide layout) — or, where there is no pin, across
-       the section passing the screen — progress 0 → 1 maps to 0 → duration.
+       the section passing the screen — progress 0 → 1 maps to first → last
+       frame.
 
-       Scroll only sets a target. Once per frame (inside Lenis's loop when it
-       is running, otherwise a plain rAF) the shown time eases toward that
-       target, and a new seek is only issued once the previous one has
-       landed, so the decoder is never queued up and the picture never jumps.
-       Stop scrolling and it settles on that exact frame; scroll up and it
-       runs backward the same way. Off-screen, the frame work returns early.
+       Scroll only sets a target. Once per frame, inside Lenis's own loop when
+       it is running (otherwise one rAF of our own), the shown time follows
+       that target on a critically damped spring: it picks up speed from rest
+       instead of lurching, keeps pace through a fast scroll, and when the
+       scroll stops it decelerates into the target with no overshoot and no
+       final snap. Lenis has already eased the scroll itself, so the spring is
+       short — it only rounds off what is left, it does not add lag.
 
-       The file is encoded with every frame a keyframe, so any seek — forward
-       or back — decodes exactly one frame. With the usual 2-second keyframe
-       spacing each seek decoded dozens, which is what made it stutter.  */
+       Seeks are whole frames. The spring's time is rounded to a frame index
+       and the seek goes to the middle of that frame, so no frame is decoded
+       twice and every browser lands on the same picture. A seek is only
+       issued once the previous one has landed — and the next one goes out on
+       `seeked` itself rather than a frame later — so the decoder is never
+       queued and never idle while the picture is behind.
+
+       The file is 24fps with every frame a keyframe, so any seek, forward or
+       back, decodes exactly one frame. It is read into memory whole before
+       it is needed, so a seek never waits on the network.                  */
     var film = doc.querySelector('.howto__filmEl');
     var filmBox = film && doc.querySelector('.howto__box');
     var filmStory = film && doc.querySelector('.howto__story');
     if (film && filmBox && filmStory && !reduce) {
-        var filmNear  = !hasIO;
-        var filmTop   = 0, filmRun = 1;   /* measured, not read per frame */
-        var smoothTime = 0;               /* the eased time being shown    */
-        var filmLast  = 0;
-        var filmDur   = 0;                /* cached once metadata is in    */
-        var filmHalf  = 1 / 48;           /* half a frame at 24fps         */
+        var filmFps    = 24;              /* the encode's rate — see above  */
+        var filmNear   = !hasIO;
+        var filmTop    = 0, filmRun = 1;  /* measured, not read per frame   */
+        var filmLast   = 0;               /* the previous frame's timestamp  */
+        var filmMax    = 0;               /* the last frame's index          */
+        var filmPos    = 0;               /* the spring's position, seconds  */
+        var filmVel    = 0;               /* and its velocity, seconds/sec   */
+        var filmWant   = 0;               /* the frame the spring is on      */
+        var filmAsked  = -1;              /* the frame last sent to decode   */
+        var filmPxF    = 1;               /* scroll px per frame, measured   */
+        var filmGoal   = 0;               /* the spring's current target     */
+        var filmLat    = .045;            /* how long a seek takes, seconds  */
+        var filmSent   = 0;               /* when the last seek went out     */
+        var filmLastY  = -1;
+        var filmLive   = false;           /* spring still moving             */
         var filmPrimed = false;
+        /* how long the spring takes to close most of a gap. Short on top of
+           Lenis, which has already smoothed the input; a touch longer without
+           it, where the raw scroll arrives in wheel-notch steps. */
+        var filmLag;
+        /* the fastest the film may run, in film-seconds per second: 60 frames
+           a second, so even a flicked wheel moves it at most one frame per
+           screen refresh — it runs to catch up rather than leaping ahead */
+        var filmMaxV = 2.5;
 
         film.loop = false;
         film.muted = true;
@@ -1015,6 +1044,20 @@
                 if (span > 1) { filmTop = r.top + y; filmRun = span; }
                 else { filmTop = r.top + y - vh; filmRun = vh + r.height; }
             }
+            filmPxF = filmMax ? filmRun / filmMax : 1;
+            filmLive = true;
+        };
+
+        /* layout above the section moves when other sections restack or
+           their images load; one measure per frame at most */
+        var filmMeasureQueued = false;
+        var filmRemeasure = function () {
+            if (filmMeasureQueued) return;
+            filmMeasureQueued = true;
+            win.requestAnimationFrame(function () {
+                filmMeasureQueued = false;
+                filmMeasure();
+            });
         };
 
         /* iOS will not paint a seeked frame until the element has played
@@ -1027,35 +1070,121 @@
             else film.pause();
         };
 
+        /* A seek is not instant: a 1080p frame takes some tens of
+           milliseconds to decode, so a frame asked for now is shown that much
+           later — by which time the spring has moved on. Asking for the
+           spring's current frame therefore always shows it a little behind,
+           and when the scroll stops the last frame turns up late, as a stall
+           and then a step. So the frame asked for is where the spring will be
+           when the seek lands: its position carried forward by its velocity
+           over the measured seek time — never past the target, so the lead
+           shrinks to nothing as it settles and the final frame is simply
+           the target's. */
+        var filmPick = function () {
+            var at = filmPos + filmVel * filmLat;
+            if (filmVel > 0) { if (at > filmGoal && filmGoal >= filmPos) at = filmGoal; }
+            else if (filmVel < 0) { if (at < filmGoal && filmGoal <= filmPos) at = filmGoal; }
+            var f = Math.round(at * filmFps);
+            return f < 0 ? 0 : f > filmMax ? filmMax : f;
+        };
+
+        var filmSeek = function () {
+            if (film.seeking || film.readyState < 1) return;
+            filmWant = filmPick();
+            if (filmWant === filmAsked) return;
+            filmAsked = filmWant;
+            filmSent = win.performance.now();
+            var at = (filmWant + .5) / filmFps;
+            /* every frame is a keyframe, so the fast path is also the exact
+               one — where the browser has it, it skips the slower seek */
+            if (film.fastSeek) film.fastSeek(at);
+            else film.currentTime = at;
+        };
+        film.addEventListener('seeked', function () {
+            /* the seek time, kept as a running average so one slow frame
+               does not throw the lead off */
+            if (filmSent) {
+                var took = (win.performance.now() - filmSent) / 1000;
+                if (took > 0 && took < .25) filmLat += (took - filmLat) * .25;
+                filmSent = 0;
+            }
+            /* the next seek goes straight out, not a frame later */
+            filmSeek();
+        });
+
         var filmFrame = function (t) {
-            if (!filmNear || !filmDur) { filmLast = t; return; }
+            var dt = filmLast ? (t - filmLast) / 1000 : 1 / 60;
+            filmLast = t;
+            if (!filmNear || !filmMax) return;
+            /* a stalled tab comes back without a leap */
+            if (dt > .064) dt = .064;
+            if (dt <= 0) return;
 
             var y = filmLenis ? filmLenis.scroll : (win.pageYOffset || doc.documentElement.scrollTop);
             var p = (y - filmTop) / filmRun;
             p = p < 0 ? 0 : p > 1 ? 1 : p;
-            /* stop a hair short of the end so the last frame stays shown */
-            var targetTime = p * (filmDur - .04);
+            var target = p * filmMax / filmFps;
 
-            /* smoothTime chases targetTime by a fixed share of the gap each
-               frame (0.1 at 60fps, scaled so any refresh rate feels the same):
-               it keeps pace while the scroll is moving and, once the scroll
-               stops, the shrinking gap makes it decelerate into the exact
-               frame instead of halting dead. */
-            var dt = filmLast ? Math.min(t - filmLast, 64) : 16.7;
-            filmLast = t;
-            var diff = targetTime - smoothTime;
-            if (diff < .002 && diff > -.002) smoothTime = targetTime;   /* settled */
-            else smoothTime += diff * (1 - Math.pow(1 - .1, dt / 16.7));
-
-            /* seek only when it lands on a different frame, and never while
-               the previous seek is still decoding */
-            var shown = film.currentTime;
-            if (!film.seeking && (smoothTime - shown > filmHalf || shown - smoothTime > filmHalf)) {
-                film.currentTime = smoothTime;
+            /* The tail. The film only has whole frames, so what reads as the
+               end of the movement is the last frame change — and both things
+               upstream of it drag that out: Lenis spends its last stretch
+               moving by fractions of a pixel, and a target just past a frame's
+               edge is approached so slowly that the final frame lands late, as
+               a tick after everything looked still. So once what is left is
+               under a frame, the film stops following the last of the glide
+               and aims at the frame the scroll will come to rest on — its
+               centre, so that frame is reached half-way through the approach,
+               while the spring still has speed, and the rest of the ease is
+               spent inside it where nothing more can change. The movement
+               before this point is exactly as it was. */
+            var yEnd = filmLenis ? filmLenis.targetScroll : y;
+            var still = filmLenis ? (yEnd - y < filmPxF && y - yEnd < filmPxF) : (y === filmLastY);
+            filmLastY = y;
+            if (still) {
+                var pe = (yEnd - filmTop) / filmRun;
+                pe = pe < 0 ? 0 : pe > 1 ? 1 : pe;
+                var end = Math.round(pe * filmMax) / filmFps;
+                /* only ever onward: if the film has already reached the
+                   frame the scroll rests on, it is not sent back to its
+                   centre — that half-frame reversal is a visible tick */
+                if ((filmVel >= 0 && end >= filmPos - .5 / filmFps) ||
+                    (filmVel <= 0 && end <= filmPos + .5 / filmFps)) target = end;
             }
+            filmGoal = target;
+
+            var gap = filmPos - target;
+            if (!filmLive && (gap > 1e-4 || gap < -1e-4)) filmLive = true;
+            if (!filmLive) return;
+
+            /* critically damped spring, exact for any frame time, so 60Hz,
+               120Hz and a dropped frame all move the same way */
+            var w = 2 / filmLag;
+            var x = w * dt;
+            var k = 1 / (1 + x + .48 * x * x + .235 * x * x * x);
+            var tmp = (filmVel + w * gap) * dt;
+            filmVel = (filmVel - w * tmp) * k;
+            var next = target + (gap + tmp) * k;
+
+            /* a hard ceiling on speed, so piled-up wheel input can never push
+               the film forward in a jump */
+            var step = next - filmPos, lim = filmMaxV * dt;
+            if (step > lim)  { next = filmPos + lim; filmVel = filmMaxV; }
+            if (step < -lim) { next = filmPos - lim; filmVel = -filmMaxV; }
+            filmPos = next;
+
+            /* settled: well inside a frame, and barely moving */
+            gap = filmPos - target;
+            if (gap < .002 && gap > -.002 && filmVel < .02 && filmVel > -.02) {
+                filmPos = target;
+                filmVel = 0;
+                filmLive = false;
+            }
+
+            filmSeek();
         };
 
         var filmLenis = (typeof lenis !== 'undefined' && lenis) ? lenis : null;
+        filmLag = filmLenis ? .14 : .2;
         if (filmLenis) {
             frameHooks.push(filmFrame);
         } else {
@@ -1064,7 +1193,7 @@
             var filmLoop = function (t) {
                 filmFrame(t);
                 if (filmNear) win.requestAnimationFrame(filmLoop);
-                else filmLooping = false;
+                else { filmLooping = false; filmLast = 0; }
             };
             var filmStart = function () {
                 if (filmLooping) return;
@@ -1074,20 +1203,50 @@
         }
 
         filmMeasure();
-        win.addEventListener('resize', filmMeasure, { passive: true });
-        win.addEventListener('load', filmMeasure);
+        win.addEventListener('resize', filmRemeasure, { passive: true });
+        win.addEventListener('load', filmRemeasure);
+        if (win.ResizeObserver) new win.ResizeObserver(filmRemeasure).observe(doc.body);
+
         var filmMeta = function () {
             var d = film.duration;
-            filmDur = d && isFinite(d) ? d : 0;
+            filmMax = d && isFinite(d) ? Math.max(0, Math.round(d * filmFps) - 1) : 0;
+            filmAsked = -1;               /* a new source has no frame yet */
             filmMeasure();
+            filmSeek();
         };
         film.addEventListener('loadedmetadata', filmMeta);
         if (film.readyState >= 1) filmMeta();
+
+        /* the whole file, in memory, before the section arrives: a seek into
+           a range that has not downloaded yet is what shows as a freeze. Where
+           that is not possible (file://, an old browser, a failed request) the
+           element falls back to buffering it itself. */
+        var filmBuffered = false;
+        var filmFallback = function () { film.preload = 'auto'; };
+        var filmLoad = function () {
+            if (filmBuffered) return;
+            filmBuffered = true;
+            if (!win.fetch || !win.URL || !win.URL.createObjectURL || location.protocol === 'file:') {
+                filmFallback();
+                return;
+            }
+            win.fetch(film.currentSrc || film.src).then(function (res) {
+                if (!res.ok) throw 0;
+                return res.blob();
+            }).then(function (blob) {
+                filmPrimed = false;
+                film.src = win.URL.createObjectURL(blob);
+                if (filmNear) filmPrime();
+            }, filmFallback);
+        };
+        if (doc.readyState === 'complete') filmLoad();
+        else win.addEventListener('load', filmLoad);
 
         if (hasIO) {
             new IntersectionObserver(function (entries) {
                 filmNear = entries[0].isIntersecting;
                 if (filmNear) {
+                    filmLoad();           /* reached before the page finished */
                     filmMeasure();
                     filmPrime();
                     if (!filmLenis) filmStart();
@@ -1096,6 +1255,143 @@
         } else {
             filmPrime();
             if (!filmLenis) filmStart();
+        }
+    }
+
+    /* ── 8b. Why Air AQ finishes before How It Works arrives ─────────────
+       The six benefits and their lines come in on their own timers once the
+       device has landed, and a quick wheel could carry the reader into How It
+       Works while they were still arriving. So the scroll is held, briefly,
+       at the one place it matters: the last position before How It Works
+       would show. Scrolling down stops there until the last card and line
+       have finished; scrolling up is never held, and nothing is held once the
+       sequence has played — it is latched, like the reveal itself.
+
+       Held through Lenis's own input hook, so nothing fights it: a wheel that
+       would cross the line is replaced by one smooth scroll that ends exactly
+       on it, and further downward input is dropped until the sequence is
+       done. With Lenis absent (motion turned down) there is no timed
+       sequence to wait for and nothing here runs.                       */
+    var gWhy = doc.querySelector('.whyaq');
+    var gNext = doc.querySelector('.howto');
+    if (gWhy && gNext && typeof lenis !== 'undefined' && lenis) {
+        var gEls = gWhy.querySelectorAll('.wcard[data-reveal], .oflow[data-reveal]');
+        /* the whole sequence's length, from the delays and durations the
+           reveal uses: cards 1.1s, lines 1.5s, each after its own --d */
+        var gLen = 0;
+        for (var gi = 0; gi < gEls.length; gi++) {
+            var gEnd = (parseFloat(gEls[gi].style.getPropertyValue('--d')) || 0) +
+                       (gEls[gi].classList.contains('oflow') ? 1500 : 1100);
+            if (gEnd > gLen) gLen = gEnd;
+        }
+        gLen += 60;                       /* the last frame of it, painted */
+
+        var gReadyAt = 0, gDone = !gEls.length;
+        var gHeldAt = 0;                  /* when the hold first engaged */
+
+        /* started: every card and line armed by the observer, and — where the
+           flight runs — let go by the device settling */
+        var gReady = function () {
+            if (gReadyAt) return true;
+            if (body.classList.contains('js-fly') && !gWhy.classList.contains('is-settled')) return false;
+            for (var n = 0; n < gEls.length; n++) {
+                /* only what is actually drawn: the stacked layouts hide the
+                   lines, and a hidden element is never revealed — waiting on
+                   one would never end */
+                if (!gEls[n].getClientRects().length) continue;
+                if (!gEls[n].classList.contains('is-in')) return false;
+            }
+            gReadyAt = win.performance.now();
+            return true;
+        };
+
+        var gFinished = function () {
+            if (gDone) return true;
+            if (gReady() && win.performance.now() - gReadyAt >= gLen) {
+                gDone = true;
+                scrollGate = null;
+                if (gMO) gMO.disconnect();
+            }
+            return gDone;
+        };
+
+        /* the start is stamped the moment it happens, not the next time the
+           wheel turns — otherwise the wait would be counted from too late */
+        var gMO = win.MutationObserver ? new win.MutationObserver(gReady) : null;
+        if (gMO) {
+            gMO.observe(gWhy, { subtree: true, attributes: true, attributeFilter: ['class'] });
+            gMO.observe(body, { attributes: true, attributeFilter: ['class'] });
+        }
+
+        scrollGate = function (d) {
+            /* wheel and trackpad only. Lenis hands touch through this same
+               hook even though it leaves touch scrolling native, and holding
+               a swipe — cancelling it and gliding the page instead — is the
+               page fighting the finger. Touch is never held. */
+            var ev = d.event;
+            if (ev && ev.type && ev.type.indexOf('touch') === 0) return true;
+            if (d.deltaY <= 0 || gFinished()) return true;
+
+            /* the wide layout only. That is where the six arrive on a timer
+               after the device lands; on tablet and phone the flight does not
+               run, the cards simply reveal as each one scrolls into view, and
+               there is nothing to wait for — the section scrolls straight on. */
+            if (!body.classList.contains('js-fly')) return true;
+
+            /* the last scroll position with How It Works still below the fold */
+            var vh = win.innerHeight;
+            var limit = Math.floor(gNext.getBoundingClientRect().top + lenis.animatedScroll - vh);
+            var target = lenis.targetScroll;
+
+            if (target > limit + 2) return true;          /* already past it */
+
+            var step = d.deltaY * (lenis.options.wheelMultiplier || 1);
+            if (target + step <= limit) return true;      /* not there yet */
+
+            /* never longer than the sequence itself, counted from the first
+               moment it held — whatever state the reveal is in, the reader
+               is always let through */
+            var now = win.performance.now();
+            if (!gHeldAt) gHeldAt = now;
+            else if (now - gHeldAt > gLen) {
+                gDone = true;
+                scrollGate = null;
+                if (gMO) gMO.disconnect();
+                return true;
+            }
+
+            if (d.event && d.event.cancelable) d.event.preventDefault();
+            if (target < limit) lenis.scrollTo(limit);    /* glide onto the line */
+            return false;
+        };
+    }
+
+    /* ── 8c. WhatsApp ─────────────────────────────────────────────────────
+       The link is built from the two data attributes, so the number lives in
+       one place in the markup. While the contact form or the newsletter form
+       is on screen the button steps out of the corner — those are the places
+       someone is already typing to the business, and on a phone the corner
+       is where their send buttons land. It comes back as soon as they leave. */
+    var wa = doc.getElementById('wa-chat');
+    if (wa) {
+        var waNum  = (wa.getAttribute('data-wa-number') || '').replace(/\D/g, '');
+        var waText = wa.getAttribute('data-wa-text') || '';
+        wa.href = 'https://wa.me/' + waNum + (waText ? '?text=' + encodeURIComponent(waText) : '');
+
+        var waAvoid = doc.querySelectorAll('.contact__panel, .fnews');
+        if (hasIO && waAvoid.length) {
+            var waSeen = [];
+            var waIO = new IntersectionObserver(function (entries) {
+                for (var n = 0; n < entries.length; n++) {
+                    var k = Array.prototype.indexOf.call(waAvoid, entries[n].target);
+                    if (k > -1) waSeen[k] = entries[n].isIntersecting;
+                }
+                var away = false;
+                for (var m = 0; m < waSeen.length; m++) if (waSeen[m]) away = true;
+                wa.classList.toggle('is-away', away);
+                body.classList.toggle('wa-away', away);
+            });
+            for (var w = 0; w < waAvoid.length; w++) waIO.observe(waAvoid[w]);
         }
     }
 
@@ -1160,7 +1456,14 @@
     var hsReel  = doc.getElementById('trust-reel');
     var hsShots = doc.querySelectorAll('.reel__shot');
 
-    if (hsAir && hsReel && hsShots.length > 1 && !reduce) {
+    /* the held stage is `position: sticky` inside `.assure`, whose overflow is
+       `clip` — a browser without clip falls back to `hidden`, which makes the
+       section a scrollport and silently unpins the stage: the slides would
+       then scroll away and leave the section's long run as blank screens. So
+       the sideways story only runs where the pin can actually hold. */
+    var hsClip = !win.CSS || !win.CSS.supports || win.CSS.supports('overflow', 'clip');
+
+    if (hsAir && hsReel && hsShots.length > 1 && !reduce && hsClip) {
         var hsMQ = win.matchMedia('(max-width: 1200px)');
         /* the statement is slide 0 and the three pictures are 1..3, so the line
            carries one more than there are photographs */
