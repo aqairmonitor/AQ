@@ -3212,13 +3212,13 @@ img, picture, video, canvas {
 @media (min-width: 1201px) {
     .assure {
         /* the scrub, after the screen: the first act, and then one stretch
-           per picture that follows it. A screen and a half apiece — a picture
+           per picture that follows it. Just under a screen apiece — a picture
            that crosses in one screen or less reads as a slide changing rather
            than as something arriving, and the extra half is what lets the
            travel be unhurried and still leave the picture standing still for a
            while at the end of it. The script splits the same shares; if a
            picture is added here, add it there too. */
-        --act2: calc(180svh + 5 * 150svh);
+        --act2: calc(88svh + 5 * 66svh);
         height: calc(100svh + var(--act2));
         padding: 0;
     }
@@ -3440,7 +3440,7 @@ img, picture, video, canvas {
     /* the scroll the pin runs on: one screen to hold, and a stretch for each
        slide to arrive and be read in */
     .js-hstory .assure {
-        height: calc(100svh + 4 * 78svh);
+        height: calc(100svh + 4 * 42svh);
         padding: 0;
     }
 

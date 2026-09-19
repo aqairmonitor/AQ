@@ -96,6 +96,10 @@
 
        Off when motion is turned down, and skipped altogether if the library
        did not load — in which case the page scrolls exactly as it did.     */
+    /* work that must run once per frame, after Lenis has moved the page —
+       run by Lenis's own loop so nothing competes with it */
+    var frameHooks = [];
+
     if (!reduce && typeof window.Lenis === 'function') {
         var lenis = new window.Lenis({
             /* the weight of the glide. `duration` rather than `lerp` — the two
@@ -115,6 +119,7 @@
 
         var lenisFrame = function (t) {
             lenis.raf(t);
+            for (var h = 0; h < frameHooks.length; h++) frameHooks[h](t);
             requestAnimationFrame(lenisFrame);
         };
         requestAnimationFrame(lenisFrame);
@@ -553,14 +558,14 @@
 
         /* How the track is shared out, in the same svh the CSS lays it out in:
            the first act, and then one stretch for each picture after the first.
-           A screen and a half apiece: a picture that crosses in one screen or
+           Just under a screen apiece: a picture that crosses in much less
            less reads as a slide changing rather than as something arriving,
            however smooth the scrolling under it is, so each one is given half
            a screen more of scroll than the travel could ever need — the slide
            itself takes about two thirds of the stretch and the rest is the
            picture standing still with its words under it. Change these and
            --act2 changes with them, or the two drift apart. */
-        var flyAct1 = 180, flyStep = 150;
+        var flyAct1 = 88, flyStep = 66;
         var flyN    = flyShots.length;
         var flyTot  = flyAct1 + (flyN - 1) * flyStep;
         var flyF0   = flyAct1 / flyTot;     /* where the first act ends */
@@ -963,91 +968,134 @@
     }
 
     /* ── 8. the how-it-works film ─────────────────────────────────────────
-       The film does not run on page load, and it does not run while the
-       section is arriving. It starts at the moment its own box is filling
-       the screen — top at or above the viewport's top, bottom at or below
-       its bottom — which on the pinned layout is the moment the stage locks,
-       and on the stacked one the moment the section has taken the screen.
+       The film never plays on its own clock: its position is the scroll.
+       Across the pinned run (wide layout) — or, where there is no pin, across
+       the section passing the screen — progress 0 → 1 maps to 0 → duration.
 
-       Two observers would not answer this on their own: once an element is
-       taller than the viewport its intersection ratio stops climbing, so
-       there is no threshold that means "full". The observer is used for what
-       it is good at — knowing when the section is anywhere near — and only
-       while it is near does a passive, rAF-coalesced scroll check measure
-       the box. Off-screen, nothing is listening and nothing is running.  */
+       Scroll only sets a target. Once per frame (inside Lenis's loop when it
+       is running, otherwise a plain rAF) the shown time eases toward that
+       target, and a new seek is only issued once the previous one has
+       landed, so the decoder is never queued up and the picture never jumps.
+       Stop scrolling and it settles on that exact frame; scroll up and it
+       runs backward the same way. Off-screen, the frame work returns early.
+
+       The file is encoded with every frame a keyframe, so any seek — forward
+       or back — decodes exactly one frame. With the usual 2-second keyframe
+       spacing each seek decoded dozens, which is what made it stutter.  */
     var film = doc.querySelector('.howto__filmEl');
-    if (film && !reduce) {
-        var filmBox   = film.parentNode;   /* .howto__film — the box measured */
-        var filmNear  = false;             /* the section is within reach     */
-        var filmOn    = false;             /* and the film is playing         */
-        var filmTick  = false;             /* one check per frame, at most    */
-        var filmBegun = false;             /* has it ever started             */
+    var filmBox = film && doc.querySelector('.howto__box');
+    var filmStory = film && doc.querySelector('.howto__story');
+    if (film && filmBox && filmStory && !reduce) {
+        var filmNear  = !hasIO;
+        var filmTop   = 0, filmRun = 1;   /* measured, not read per frame */
+        var smoothTime = 0;               /* the eased time being shown    */
+        var filmLast  = 0;
+        var filmDur   = 0;                /* cached once metadata is in    */
+        var filmHalf  = 1 / 48;           /* half a frame at 24fps         */
+        var filmPrimed = false;
 
-        /* a play() that cannot throw: if the browser declines (it should not,
-           the film is muted and inert) the page simply carries on */
-        var filmPlay = function () {
-            var p = film.play();
-            if (p && p.catch) p.catch(function () {});
-        };
+        film.loop = false;
+        film.muted = true;
+        film.pause();
 
-        var filmFills = function () {
+        var filmMeasure = function () {
             var r  = filmBox.getBoundingClientRect();
             var vh = win.innerHeight || doc.documentElement.clientHeight;
-            /* the box covers the screen, or — on a screen taller than the box
-               ever gets — it is entirely inside it. One pixel of slack, so a
-               fractional layout never sits just short of the test. */
-            return (r.top <= 1 && r.bottom >= vh - 1) ||
-                   (r.top >= -1 && r.bottom <= vh + 1 && r.height > 0);
-        };
-
-        var filmRead = function () {
-            filmTick = false;
-            var want = filmFills();
-            if (want === filmOn) return;
-            filmOn = want;
-            if (want) {
-                /* smoothly from the beginning, the first time and after every
-                   time it has left the screen */
-                if (!filmBegun || film.paused) {
-                    try { film.currentTime = 0; } catch (e) {}
-                }
-                filmBegun = true;
-                filmPlay();
+            var y  = win.pageYOffset || doc.documentElement.scrollTop;
+            var pin = r.height - filmStory.getBoundingClientRect().height;
+            if (pin > 1) {
+                /* pinned: from the lock to the release */
+                filmTop = r.top + y;
+                filmRun = pin;
             } else {
-                film.pause();
+                /* stacked: from the section's top reaching the screen's top
+                   to its bottom reaching the screen's bottom — or, when it is
+                   shorter than the screen, across its whole pass */
+                var span = r.height - vh;
+                if (span > 1) { filmTop = r.top + y; filmRun = span; }
+                else { filmTop = r.top + y - vh; filmRun = vh + r.height; }
             }
         };
 
-        var filmQueue = function () {
-            if (filmTick) return;
-            filmTick = true;
-            win.requestAnimationFrame(filmRead);
+        /* iOS will not paint a seeked frame until the element has played
+           once — a muted play/pause primes it without anything showing */
+        var filmPrime = function () {
+            if (filmPrimed) return;
+            filmPrimed = true;
+            var p = film.play();
+            if (p && p.then) p.then(function () { film.pause(); }, function () {});
+            else film.pause();
         };
+
+        var filmFrame = function (t) {
+            if (!filmNear || !filmDur) { filmLast = t; return; }
+
+            var y = filmLenis ? filmLenis.scroll : (win.pageYOffset || doc.documentElement.scrollTop);
+            var p = (y - filmTop) / filmRun;
+            p = p < 0 ? 0 : p > 1 ? 1 : p;
+            /* stop a hair short of the end so the last frame stays shown */
+            var targetTime = p * (filmDur - .04);
+
+            /* smoothTime chases targetTime by a fixed share of the gap each
+               frame (0.1 at 60fps, scaled so any refresh rate feels the same):
+               it keeps pace while the scroll is moving and, once the scroll
+               stops, the shrinking gap makes it decelerate into the exact
+               frame instead of halting dead. */
+            var dt = filmLast ? Math.min(t - filmLast, 64) : 16.7;
+            filmLast = t;
+            var diff = targetTime - smoothTime;
+            if (diff < .002 && diff > -.002) smoothTime = targetTime;   /* settled */
+            else smoothTime += diff * (1 - Math.pow(1 - .1, dt / 16.7));
+
+            /* seek only when it lands on a different frame, and never while
+               the previous seek is still decoding */
+            var shown = film.currentTime;
+            if (!film.seeking && (smoothTime - shown > filmHalf || shown - smoothTime > filmHalf)) {
+                film.currentTime = smoothTime;
+            }
+        };
+
+        var filmLenis = (typeof lenis !== 'undefined' && lenis) ? lenis : null;
+        if (filmLenis) {
+            frameHooks.push(filmFrame);
+        } else {
+            /* no Lenis: one rAF of its own, running only while near */
+            var filmLooping = false;
+            var filmLoop = function (t) {
+                filmFrame(t);
+                if (filmNear) win.requestAnimationFrame(filmLoop);
+                else filmLooping = false;
+            };
+            var filmStart = function () {
+                if (filmLooping) return;
+                filmLooping = true;
+                win.requestAnimationFrame(filmLoop);
+            };
+        }
+
+        filmMeasure();
+        win.addEventListener('resize', filmMeasure, { passive: true });
+        win.addEventListener('load', filmMeasure);
+        var filmMeta = function () {
+            var d = film.duration;
+            filmDur = d && isFinite(d) ? d : 0;
+            filmMeasure();
+        };
+        film.addEventListener('loadedmetadata', filmMeta);
+        if (film.readyState >= 1) filmMeta();
 
         if (hasIO) {
             new IntersectionObserver(function (entries) {
-                var near = entries[0].isIntersecting;
-                if (near === filmNear) return;
-                filmNear = near;
-                if (near) {
-                    /* the file is only asked for once the section is close:
-                       nothing of it is fetched on page load, and it is warm
-                       by the time the stage fills the screen */
-                    if (film.preload !== 'auto') { film.preload = 'auto'; film.load(); }
-                    win.addEventListener('scroll', filmQueue, { passive: true });
-                    win.addEventListener('resize', filmQueue);
-                    filmQueue();
-                } else {
-                    win.removeEventListener('scroll', filmQueue);
-                    win.removeEventListener('resize', filmQueue);
-                    if (filmOn) { filmOn = false; film.pause(); }
+                filmNear = entries[0].isIntersecting;
+                if (filmNear) {
+                    filmMeasure();
+                    filmPrime();
+                    if (!filmLenis) filmStart();
                 }
-            }, { rootMargin: '100px 0px' }).observe(filmBox);
+            }, { rootMargin: '100% 0px' }).observe(filmBox);
         } else {
-            /* no observer: the same check, on the same passive listener */
-            win.addEventListener('scroll', filmQueue, { passive: true });
-            win.addEventListener('resize', filmQueue);
-            filmQueue();
+            filmPrime();
+            if (!filmLenis) filmStart();
         }
     }
 
