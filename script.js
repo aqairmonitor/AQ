@@ -1394,6 +1394,136 @@
             for (var w = 0; w < waAvoid.length; w++) waIO.observe(waAvoid[w]);
         }
     }
+    /* ── 8d. the Why Air AQ air orbit environment ─────────────────────────
+       Three jobs, all of them on the background of that section and none of
+       them on its content. The heading, the lead, the product, the six
+       benefits, their icons, their numbers and the connector lines are not
+       read here and not written to.
+
+         · the entrance — one class, .is-lit, put on the section the first
+           time it comes into view. The CSS does the rest: the field comes up
+           from 85% and transparent over about a second and a quarter, a beat
+           behind the heading, and the grid a little after that. It is set
+           once and never taken off, so nothing re-runs on the way back up.
+
+         · the scroll — one number, --wy, -1 as the section arrives to +1 as
+           it leaves. The CSS spends it as a two-and-a-half degree tilt and a
+           four degree turn on .ofield__deep, so the orbits open and close a
+           little across the pass. That is the whole of it.
+
+         · the cursor — --mx and --my, at most 8px and 6px, eased toward the
+           pointer rather than snapped to it. Desktop only, and only on a
+           device that actually has a pointer.
+
+       All of it rides the frame loop that is already running, after Lenis has
+       moved the page: no second rAF, and the only listener is a passive
+       pointermove that does nothing but store two numbers. The per-frame work
+       is one rect read, and only while the section is on screen — part 2's
+       observer parks it otherwise — with the write skipped when the number
+       has not moved.
+
+       The scroll tilt and the cursor are desktop in both directions: the CSS
+       stops reading them below 1200 and this stops writing them, so neither
+       side is doing work the other throws away. With Lenis absent or motion
+       turned down there is no frame loop at all, and the CSS resting state —
+       field square, field visible — is the section as it should look.     */
+    var envWhy = doc.querySelector('.whyaq');
+
+    if (envWhy) {
+        /* the entrance. Its own observer rather than a reveal attribute: the
+           field is not content and must not wait on the reveal chain that the
+           six benefits are on. A third of the section in view is the trigger,
+           and the observer lets itself go afterwards. */
+        if (hasIO) {
+            var envIO = new IntersectionObserver(function (entries) {
+                for (var i = 0; i < entries.length; i++) {
+                    if (!entries[i].isIntersecting) continue;
+                    envWhy.classList.add('is-lit');
+                    envIO.disconnect();
+                }
+            }, { threshold: .18 });
+            envIO.observe(envWhy);
+        } else {
+            envWhy.classList.add('is-lit');
+        }
+
+        if (!reduce) {
+            var envWide  = win.matchMedia('(min-width: 1201px)');
+            /* a mouse, not a finger dragged across the glass */
+            var envMouse = win.matchMedia('(min-width: 1201px) and (hover: hover) and (pointer: fine)');
+            var envLast  = -9;
+            /* where the cursor is, -1 to 1 across the viewport, and where the
+               field has got to on its way there */
+            var envTx = 0, envTy = 0, envX = 0, envY = 0;
+            /* the last pair actually written, as two numbers rather than an
+               object: this is checked every frame and an object here would be
+               a fresh allocation sixty times a second for nothing */
+            var envPx = 9e9, envPy = 9e9;
+
+            if (envMouse.matches) {
+                doc.addEventListener('pointermove', function (ev) {
+                    if (ev.pointerType && ev.pointerType !== 'mouse') return;
+                    envTx = (ev.clientX / win.innerWidth)  * 2 - 1;
+                    envTy = (ev.clientY / win.innerHeight) * 2 - 1;
+                }, { passive: true });
+            }
+
+            frameHooks.push(function () {
+                /* out of range: hand both numbers back to the stylesheet. An
+                   inline value outranks the media query that zeroes them, so a
+                   window dragged down from desktop would otherwise keep the
+                   last tilt it had. */
+                if (!envWide.matches) {
+                    if (envLast !== -9) {
+                        envLast = -9;
+                        envWhy.style.removeProperty('--wy');
+                    }
+                    if (envPx !== 9e9) {
+                        envPx = envPy = 9e9;
+                        envX = envY = envTx = envTy = 0;
+                        envWhy.style.removeProperty('--mx');
+                        envWhy.style.removeProperty('--my');
+                    }
+                    return;
+                }
+
+                if (envWhy.classList.contains('is-idle')) return;
+
+                var r  = envWhy.getBoundingClientRect();
+                var vh = win.innerHeight || doc.documentElement.clientHeight;
+                /* 0 with the section's top on the bottom edge of the screen,
+                   1 with its bottom on the top edge — the whole of its pass */
+                var p = (vh - r.top) / (vh + r.height);
+                p = p < 0 ? 0 : p > 1 ? 1 : p;
+                p = p * 2 - 1;
+
+                /* a thousandth of the run is a hundredth of a degree: below
+                   this there is nothing to see and the write is only work */
+                if (p < envLast - .002 || p > envLast + .002) {
+                    envLast = p;
+                    envWhy.style.setProperty('--wy', p.toFixed(3));
+                }
+
+                if (!envMouse.matches) return;
+
+                /* eased toward the cursor at a twelfth of the remaining
+                   distance a frame. Snapping the field to the pointer is the
+                   dramatic tilt this must not be; arriving a few frames late
+                   is what makes it read as depth. */
+                envX += (envTx - envX) * .08;
+                envY += (envTy - envY) * .08;
+
+                var mx = envX * 8, my = envY * 6;
+                /* a twentieth of a pixel: under this the field has settled and
+                   there is nothing left to write */
+                if (mx > envPx - .05 && mx < envPx + .05 &&
+                    my > envPy - .05 && my < envPy + .05) return;
+                envPx = mx; envPy = my;
+                envWhy.style.setProperty('--mx', mx.toFixed(2) + 'px');
+                envWhy.style.setProperty('--my', my.toFixed(2) + 'px');
+            });
+        }
+    }
 
     /* ── 9. back to top ───────────────────────────────────────────────────
        One passive scroll listener, gated on a flag so the class is only
@@ -1405,12 +1535,31 @@
     if (toTop) {
         var topUp     = false;
         var topQueued = false;
+        /* the bar carries its own state off this same read rather than a
+           second listener: one scroll handler, one rAF, two classes */
+        var topNav    = doc.querySelector('.nav');
+        var navStuck  = false;
 
         var topRead = function () {
             topQueued = false;
+            var y = win.pageYOffset || doc.documentElement.scrollTop;
+
+            /* the bar sits over eight different surfaces on the way down, and
+               over a photograph at the top it is lightest. Past the first
+               scroll it takes a little more of its own ground — deeper fill,
+               more blur — so the links stay legible over whatever is behind
+               them without the bar ever becoming a solid block. */
+            if (topNav) {
+                var stuck = y > 24;
+                if (stuck !== navStuck) {
+                    navStuck = stuck;
+                    topNav.classList.toggle('is-stuck', stuck);
+                }
+            }
+
             /* a screen and a half: far enough that the corner is not asking
                to undo a scroll the reader has barely started */
-            var show = (win.pageYOffset || doc.documentElement.scrollTop) > win.innerHeight * 1.5;
+            var show = y > win.innerHeight * 1.5;
             if (show === topUp) return;
             topUp = show;
             toTop.classList.toggle('is-up', show);

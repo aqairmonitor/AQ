@@ -921,6 +921,34 @@
              cannot drift apart. -->
         <div class="orbit">
 
+            <!-- the air orbit environment. Background only, and all of it
+                 centred on the device: ambient light, a perspective grid, the
+                 sensor waves leaving the product, three tilted orbit paths,
+                 and the pool of air the product itself sits in.
+
+                 .ofield__deep is everything that answers the scroll and the
+                 cursor; the pool is outside it, because it belongs to the
+                 device rather than to the field and must not turn with it.
+
+                 The whole lot paints under .orbit__flow and .orbit__core, so
+                 the connector lines, the product and the six benefits are in
+                 front of it and stay the thing you look at. -->
+            <div class="ofield" aria-hidden="true">
+                <div class="ofield__deep">
+                    <span class="ofield__lume"></span>
+                    <span class="ofield__lume ofield__lume--b"></span>
+                    <span class="ofield__grid"></span>
+                    <span class="ofield__wave ofield__wave--1"></span>
+                    <span class="ofield__wave ofield__wave--2"></span>
+                    <span class="ofield__wave ofield__wave--3"></span>
+                    <span class="ofield__wave ofield__wave--4"></span>
+                    <span class="ofield__ring ofield__ring--1"></span>
+                    <span class="ofield__ring ofield__ring--2"></span>
+                    <span class="ofield__ring ofield__ring--3"></span>
+                </div>
+                <span class="ofield__glow"></span>
+            </div>
+
             <!-- the air the device is reading: two rings and six lines out to
                  the benefits, each line drawn on with its own benefit -->
             <svg class="orbit__flow" viewBox="0 0 1200 780" fill="none" aria-hidden="true">

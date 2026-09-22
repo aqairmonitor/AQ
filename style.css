@@ -853,7 +853,9 @@ img, picture, video, canvas {
     border: 1px solid rgba(255, 255, 255, .28);
     box-shadow: var(--fcard-sh);
     transform: translateY(0) scale(var(--s)) rotate(var(--r));
-    will-change: transform;
+    /* no `will-change` here: an element with a running transform animation is
+       already on its own layer, and six permanent hints cost six layers on
+       every screen the cards are not moving on */
     animation: bob 9s ease-in-out infinite;
     /* `translate` composes with the bob's `transform`, so the hover lift
        never interrupts the drift */
@@ -896,9 +898,14 @@ img, picture, video, canvas {
     }
 }
 
+/* Half the travel it used to have. These read as instruments held steady in
+   the air, not as objects bobbing on water — at 6px the movement is felt
+   rather than watched, which is the whole of what it is for. Each card also
+   runs on its own duration below, so the six never come back into step with
+   each other the way a shared period makes them. */
 @keyframes bob {
-    0%, 100% { transform: translateY(0)     scale(var(--s)) rotate(var(--r)); }
-    50%      { transform: translateY(-11px) scale(var(--s)) rotate(var(--r)); }
+    0%, 100% { transform: translateY(0)    scale(var(--s)) rotate(var(--r)); }
+    50%      { transform: translateY(-6px) scale(var(--s)) rotate(var(--r)); }
 }
 
 .fcard__icon {
@@ -980,12 +987,12 @@ img, picture, video, canvas {
 }
 
 /* placement — orbiting the device, not gridded */
-.fcard--aq  { top: calc(4% + 18px);  left: -9%;  --r: -1.4deg; animation-delay: 0s;    }
-.fcard--co2 { top: 20%; right: -8%;  --r: 1.6deg;  animation-delay: -2.1s; }
-.fcard--voc { top: 43%; right: 0%;   --r: -2deg;   animation-delay: -5.6s; }
-.fcard--pm  { top: 54%; left: -13%;  --r: 1.1deg;  animation-delay: -4.2s; }
-.fcard--gas { top: calc(69% - 30px); right: -6%;  --r: -1deg;   animation-delay: -6.4s; }
-.fcard--temp { top: 29%; left: -4%;  --r: 1.3deg;  animation-delay: -7.8s; }
+.fcard--aq  { top: calc(4% + 18px);  left: -9%;  --r: -1.4deg; animation-delay: 0s;    animation-duration: 9s;    }
+.fcard--co2 { top: 20%; right: -8%;  --r: 1.6deg;  animation-delay: -2.1s; animation-duration: 10.4s; }
+.fcard--voc { top: 43%; right: 0%;   --r: -2deg;   animation-delay: -5.6s; animation-duration: 11.7s; }
+.fcard--pm  { top: 54%; left: -13%;  --r: 1.1deg;  animation-delay: -4.2s; animation-duration: 9.8s;  }
+.fcard--gas { top: calc(69% - 30px); right: -6%;  --r: -1deg;   animation-delay: -6.4s; animation-duration: 12.3s; }
+.fcard--temp { top: 29%; left: -4%;  --r: 1.3deg;  animation-delay: -7.8s; animation-duration: 11.1s; }
 
 .insight {
     position: absolute;
@@ -2860,23 +2867,27 @@ img, picture, video, canvas {
    about a third of its width and throws the rest away: the pedestal the whole
    render is built around ends up cropped off the side of it.
 
-   trustportrait.png is the same room shot in portrait, 1024x1536, and it
+   newresponsive.png is the same room shot in portrait, 1024x1535, and it
    carries the product already standing on the pedestal. That is what this
    layout needs rather than a nicety: the flight that delivers the device on
    the wide layout does not run here, and the column that would hold it is
    `display: none`, so without the product in the photograph the render is a
    picture of an empty plinth.
 
-   Only the file changes. Same two layers, same `cover`, same `center`, so the
-   picture fills the section at every handset size the way it always did — the
-   box crops it, it is never scaled unevenly, and there is no edge for a white
-   gap to appear at.
+   Same two layers and the same `cover`, so the picture fills the section at
+   every handset size the way it always did — the box crops it, it is never
+   scaled unevenly, and there is no edge for a white gap to appear at. What
+   the crop keeps is now said rather than left to the middle: the device and
+   its plinth stand left of centre in this frame, about a fifth to a half of
+   the way across, and a centred crop on a narrow screen took the near edge of
+   both off. Anchored at 38% they are inside the window at every handset
+   shape, and where the crop takes less the room still opens the way it did.
    -------------------------------------------------------------------------- */
 @media (max-width: 767px) {
     .assure::after,
     .assure__ground::after {
-        background-image: url("assets/image/trustportrait.png");
-        background-position: center;
+        background-image: url("assets/image/newresponsive.png");
+        background-position: 38% center;
         background-size: cover;
         background-repeat: no-repeat;
     }
@@ -3111,7 +3122,9 @@ img, picture, video, canvas {
     margin: 0;
     font-family: var(--font-display);
     font-size: clamp(2rem, 3.4vw, 3.1rem);
-    font-weight: 600;
+    /* the weight every other section heading carries: this one was 600 and
+       read a step lighter than the page's own voice */
+    font-weight: 800;
     line-height: 1.12;
     letter-spacing: -.024em;
     color: var(--white);
@@ -3755,6 +3768,389 @@ img, picture, video, canvas {
     background: radial-gradient(circle at 50% 50%, rgba(98, 155, 181, .18) 0%, rgba(185, 217, 225, .12) 48%, rgba(255, 255, 255, 0) 74%);
     filter: blur(22px);
 }
+/* ═══ the air orbit environment ═════════════════════════════════════════════
+   The background of Why Air AQ, and only the background. The eyebrow, the
+   heading, the lead, the device, the six benefits, their icons, their numbers
+   and the connector lines are untouched — nothing below moves any of them,
+   nothing below is in the flow, and every part of it is inert.
+
+   Five layers, painted in this order and all of them under .orbit__flow (the
+   connector lines, z-index 1) and under .orbit__core (the product, 2):
+
+       ambient light  →  perspective grid  →  sensor waves  →  orbit rings
+       →  the pool immediately behind the product
+
+   Everything is centred on the device, not on the section: .orbit is the
+   1200 x 780 stage and the core sits at 50% / 50.3% of it, so the whole
+   environment is built on that one point.
+
+   Readability is handled by where the field is, not by how faint it is. One
+   radial mask on the outside of the whole thing keeps it full strength across
+   the middle, where the device and the empty air are, and takes it to nothing
+   before the outer edge — so the benefits read on clean ground while the
+   middle is unmistakably alive.
+   -------------------------------------------------------------------------- */
+
+/* the depth number. Written by the script once a frame while the section is on
+   screen, -1 as it comes up to +1 as it leaves. It is the whole of the scroll
+   interaction: the field tilts a couple of degrees across its pass, and
+   nothing else on the page reads it. Declared here so the section has a
+   resting value — with the script absent the field simply sits square. */
+.whyaq { --wy: 0; }
+
+/* the angle the gradient has travelled round a ring. Registered, so it can be
+   animated at all: an unregistered custom property has no type and jumps from
+   one value to the next. Where @property is not understood the rings hold
+   still and everything else runs, which is a fair reading of the section. */
+@property --spin {
+    syntax: '<angle>';
+    inherits: false;
+    initial-value: 0deg;
+}
+
+/* --- the stage the field is built on --------------------------------------
+   z-index 0: over the section's own ground, under the lines and the product.
+
+   The perspective is long. A short one would throw the tilted rings into a
+   wide-angle sweep — the look of a landing strip — where 1100px keeps them as
+   orbits seen from a little above, which is the whole difference between this
+   and a graphic.
+   -------------------------------------------------------------------------- */
+
+.ofield {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    perspective: 1100px;
+    perspective-origin: 50% 50.3%;
+    /* the fade, and the only thing keeping the type clear. Full strength out
+       to a third of the stage — the device plus the air around it — then down
+       to nothing by the time it would reach a benefit. The rings and waves run
+       their full size underneath it and are dissolved on the way out, so what
+       fades is the outer sweep of the movement, never the movement itself. */
+    -webkit-mask-image: radial-gradient(ellipse 41% 53% at 50% 50.3%,
+        #000 0%, #000 58%, rgba(0, 0, 0, .62) 79%, rgba(0, 0, 0, 0) 100%);
+            mask-image: radial-gradient(ellipse 41% 53% at 50% 50.3%,
+        #000 0%, #000 58%, rgba(0, 0, 0, .62) 79%, rgba(0, 0, 0, 0) 100%);
+    /* the entrance. The field arrives a beat after the heading does, so what
+       you notice first is the product and the words and only then that the
+       air behind them is moving. */
+    opacity: 0;
+    scale: .85;
+    transition: opacity 1.25s var(--ease) 180ms, scale 1.35s var(--ease) 180ms;
+}
+
+.whyaq.is-lit .ofield { opacity: 1; scale: 1; }
+
+/* everything that answers the scroll and the cursor. Separated from .ofield so
+   the entrance owns `scale` and this owns `transform`, and the two never have
+   to be written into one declaration and kept in step by hand.
+
+   --wy is the section's own pass, -1 to +1; --mx and --my are the cursor, in
+   pixels, already eased by the script. The tilt is deliberately small: three
+   degrees is enough for the rings to open and close as you scroll past, and
+   more than that reads as the page being swung about. */
+.ofield__deep {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    transform:
+        rotateX(calc(var(--wy) * 2.5deg))
+        rotateY(calc(var(--wy) * -4deg))
+        translate3d(var(--mx, 0px), var(--my, 0px), 0);
+}
+
+/* --- layer 1: ambient light ------------------------------------------------
+   Four pools rather than one gradient — two of Ice and Glacier carrying the
+   light, two of Turquoise and Slate carrying a trace of colour underneath
+   them — on two planes drifting against each other. Where they cross, the
+   light gathers; as they separate it thins, and the section reads as air
+   moving through it rather than as a gradient being animated.
+
+   Drifted with transform rather than background-position: the two look the
+   same and only one of them repaints a half-megapixel of gradient every frame.
+   -------------------------------------------------------------------------- */
+
+.ofield__lume {
+    position: absolute;
+    left: 50%;
+    top: 50.3%;
+    width: 112%;
+    aspect-ratio: 1.42;
+    translate: -50% -50%;
+    border-radius: 50%;
+    background:
+        radial-gradient(38% 44% at 41% 43%, rgba(214, 235, 243, .95), rgba(214, 235, 243, 0) 72%),
+        radial-gradient(32% 36% at 63% 59%, rgba(185, 217, 225, .82), rgba(185, 217, 225, 0) 74%);
+    animation: ofLume 17s ease-in-out infinite;
+}
+
+.ofield__lume--b {
+    width: 96%;
+    aspect-ratio: 1.3;
+    background:
+        radial-gradient(30% 34% at 58% 37%, rgba(68, 127, 152, .26), rgba(68, 127, 152, 0) 76%),
+        radial-gradient(28% 32% at 37% 63%, rgba(98, 155, 181, .28), rgba(98, 155, 181, 0) 76%);
+    animation: ofLumeB 23s ease-in-out infinite;
+}
+
+@keyframes ofLume {
+    0%, 100% { transform: translate3d(-3%,  1.5%, 0) scale(1);    opacity: .9; }
+    33%      { transform: translate3d( 3%, -2.5%, 0) scale(1.07); opacity: 1;  }
+    66%      { transform: translate3d( 1%,  3%,   0) scale(1.02); opacity: .95; }
+}
+
+@keyframes ofLumeB {
+    0%, 100% { transform: translate3d( 2.5%, -2%, 0) scale(1.04); }
+    50%      { transform: translate3d(-2.5%,  2%, 0) scale(.96);  }
+}
+
+/* --- layer 2: the air grid -------------------------------------------------
+   A plane laid almost flat under the device, so it recedes instead of sitting
+   behind. Ice Blue hairlines on a 68px pitch — wide enough that it reads as
+   measurement rather than as a screen, and it is masked down to the middle of
+   the stage so it never reaches a horizon, which is what would make it look
+   like a game.
+
+   It creeps up by exactly one cell, so the loop closes on itself and there is
+   no point in the cycle where the grid jumps.
+   -------------------------------------------------------------------------- */
+
+.ofield__grid {
+    position: absolute;
+    left: 50%;
+    top: 50.3%;
+    width: 150%;
+    height: 190%;
+    translate: -50% -50%;
+    transform: rotateX(64deg);
+    background-image:
+        repeating-linear-gradient(90deg, rgba(98, 155, 181, .7) 0 1px, rgba(98, 155, 181, 0) 1px 68px),
+        repeating-linear-gradient(0deg,  rgba(98, 155, 181, .7) 0 1px, rgba(98, 155, 181, 0) 1px 68px);
+    -webkit-mask-image: radial-gradient(ellipse 34% 40% at 50% 50%,
+        #000 0%, rgba(0, 0, 0, .7) 46%, rgba(0, 0, 0, 0) 80%);
+            mask-image: radial-gradient(ellipse 34% 40% at 50% 50%,
+        #000 0%, rgba(0, 0, 0, .7) 46%, rgba(0, 0, 0, 0) 80%);
+    opacity: 0;
+    transition: opacity 1.4s var(--ease) 520ms;
+    animation: ofGrid 32s linear infinite;
+}
+
+.whyaq.is-lit .ofield__grid { opacity: 1; }
+
+@keyframes ofGrid {
+    from { transform: rotateX(64deg) translateY(0); }
+    to   { transform: rotateX(64deg) translateY(68px); }
+}
+
+/* --- layer 3: the sensor waves ---------------------------------------------
+   Four of them, on the same plane as the orbits, leaving from behind the
+   device and running out toward the benefits: the reading being taken, and the
+   line between the product in the middle and the information around it.
+
+   They start at a third opacity and end at nothing, and because the band is a
+   percentage of the element it widens as the wave grows — so it softens as it
+   goes without a filter having to be recomputed sixty times a second.
+   -------------------------------------------------------------------------- */
+
+.ofield__wave {
+    position: absolute;
+    left: 50%;
+    top: 50.3%;
+    width: 30%;
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    border-radius: 50%;
+    opacity: 0;
+    background: radial-gradient(closest-side,
+        rgba(214, 235, 243, 0)   58%,
+        rgba(214, 235, 243, .85) 72%,
+        rgba(98, 155, 181, .95)  80%,
+        rgba(185, 217, 225, .55) 90%,
+        rgba(185, 217, 225, 0)   99%);
+    filter: blur(1.5px);
+    animation: ofWave var(--dur, 9s) linear infinite;
+}
+
+@keyframes ofWave {
+    0%   { opacity: 0;   transform: rotateX(58deg) scale(.55); }
+    12%  { opacity: .42; transform: rotateX(58deg) scale(.73); }
+    58%  { opacity: .24; transform: rotateX(58deg) scale(1.42); }
+    100% { opacity: 0;   transform: rotateX(58deg) scale(2.05); }
+}
+
+/* four periods with no common factor, started across the cycle, so one is
+   always leaving as another arrives and the four never line up */
+.ofield__wave--1 { --dur: 7.4s;  animation-delay:  0s;    }
+.ofield__wave--2 { --dur: 8.9s;  animation-delay: -2.6s;  }
+.ofield__wave--3 { --dur: 10.3s; animation-delay: -5.4s;  }
+.ofield__wave--4 { --dur: 9.1s;  animation-delay: -7.1s;  }
+
+/* --- layer 4: the orbit rings ----------------------------------------------
+   Three orbital paths around the device, each on its own plane. The tilt is
+   the thing: laid back between 60 and 72 degrees and turned against each other
+   on the screen, they read as paths going round the product rather than as
+   circles drawn behind it.
+
+   The line is a conic gradient through the palette, carved to a hairline by a
+   two-layer mask — the border box minus the padding box, which leaves exactly
+   the border. Spinning the gradient inside its own plane sends the light
+   travelling round the path, which is the movement; the ellipse itself does
+   not change shape, so nothing swings.
+   -------------------------------------------------------------------------- */
+
+.ofield__ring {
+    position: absolute;
+    left: 50%;
+    top: 50.3%;
+    width: var(--w, 34%);
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    border: 2.5px solid transparent;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg,
+        rgba(68, 127, 152, .22),
+        rgba(68, 127, 152, .78)  18%,
+        rgba(98, 155, 181, .92)  34%,
+        rgba(214, 235, 243, 1)   48%,
+        rgba(98, 155, 181, .85)  62%,
+        rgba(68, 127, 152, .70)  80%,
+        rgba(68, 127, 152, .22)  100%) border-box;
+    -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+            mask-composite: exclude;
+    transform: rotateZ(var(--tz, 0deg)) rotateX(var(--tx, 65deg)) translateZ(var(--tzz, 0px)) rotateZ(var(--spin));
+    animation: ofSpin var(--dur, 28s) linear infinite;
+}
+
+@keyframes ofSpin     { to { --spin: 360deg;  } }
+@keyframes ofSpinBack { to { --spin: -360deg; } }
+
+.ofield__ring--1 { --w: 30%; --tx: 65deg; --tz:   0deg; --tzz:  10px; --dur: 26s; }
+.ofield__ring--2 { --w: 39%; --tx: 72deg; --tz:  25deg; --tzz: -40px; --dur: 34s; animation-name: ofSpinBack; }
+.ofield__ring--3 { --w: 48%; --tx: 60deg; --tz: -30deg; --tzz: -90px; --dur: 22s; }
+
+/* --- layer 5: the pool behind the product ----------------------------------
+   Outside .ofield__deep, so it holds still while everything behind it turns —
+   it belongs to the device, not to the field. .orbit__halo is the tight white
+   right against the shell and .orbit__cast the shadow it stands on; this is
+   the Ice Blue air between the two and the orbits, and it is what separates
+   the product from the movement so the product stays the thing you look at.
+   -------------------------------------------------------------------------- */
+
+.ofield__glow {
+    position: absolute;
+    left: 50%;
+    top: 50.3%;
+    width: 44%;
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 50%,
+        rgba(255, 255, 255, .38) 0%,
+        rgba(214, 235, 243, .44) 34%,
+        rgba(185, 217, 225, .24) 60%,
+        rgba(185, 217, 225, 0)   80%);
+    animation: ofBreathe 19s ease-in-out infinite;
+}
+
+@keyframes ofBreathe {
+    0%, 100% { transform: scale(1);    opacity: .88; }
+    50%      { transform: scale(1.07); opacity: 1;   }
+}
+
+/* nothing runs while the section is off screen — the same switch the existing
+   rings and the device already answer to (part 2 of the script) */
+.whyaq.is-idle .ofield__ring,
+.whyaq.is-idle .ofield__wave,
+.whyaq.is-idle .ofield__lume,
+.whyaq.is-idle .ofield__grid,
+.whyaq.is-idle .ofield__glow { animation-play-state: paused; }
+
+/* --- the stacked layout ----------------------------------------------------
+   Below 1080 the stage is not a stage: .orbit becomes a two-column grid with
+   the device at the top of it, so a field that covered .orbit would be centred
+   somewhere down the card list.
+
+   It is given a box of its own instead, in the same proportion to the device
+   that the stage was — 1200 across to a 288 product, so 4.17 times the core —
+   and hung on the core's middle. Every size inside is a percentage of that
+   box, so the whole environment scales with the product and not one of the
+   rules above has to be restated.
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 1080px) {
+    .ofield {
+        --core: min(230px, 46vw);
+        inset: calc(var(--core) / 2) auto auto 50%;
+        /* the stage gave the device a clear 1200 across to be the middle of;
+           stacked, the first two benefits start about a card's height below it,
+           so the same ratio put the widest orbit straight through their
+           headings. Three times the core is as far as the field can open here
+           before it reaches type. */
+        width: calc(var(--core) * 3);
+        aspect-ratio: 1200 / 780;
+        /* the field's own 50.3% is where the device is, so that is the point
+           put on the core's middle */
+        translate: -50% -50.3%;
+    }
+}
+
+/* --- less of it on smaller screens -----------------------------------------
+   Tablet keeps the rings, the waves and the light and drops the grid, which
+   needs width to recede into. The phone keeps two rings, two waves and the
+   pool behind the product, and takes everything slower.
+
+   The scroll tilt and the cursor are desktop in both directions: the CSS stops
+   spending --wy and --mx below 1200 and the script stops writing them, so
+   neither side is doing work the other ignores.
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 1200px) {
+    .whyaq { --wy: 0; }
+    .ofield__deep { transform: none; }
+    .ofield__grid { display: none; }
+    .ofield__ring { animation-duration: calc(var(--dur, 28s) * 1.25); }
+}
+
+@media (max-width: 767px) {
+    .ofield__ring--3,
+    .ofield__wave--3,
+    .ofield__wave--4 { display: none; }
+
+    .ofield__ring { border-width: 1.5px; animation-duration: calc(var(--dur, 28s) * 1.5); }
+    .ofield__wave { animation-duration: calc(var(--dur, 9s) * 1.35); }
+    .ofield__lume { animation-duration: 26s; }
+    .ofield__glow { animation-duration: 24s; }
+}
+
+/* --- motion turned down ----------------------------------------------------
+   The environment stays and stops moving. Light and depth are not motion, and
+   the device still has to sit inside something; the waves, which are only
+   their movement, go.
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+    .whyaq { --wy: 0; }
+
+    .ofield {
+        opacity: 1;
+        scale: 1;
+        transition: none;
+    }
+
+    .ofield__deep { transform: none; }
+    .ofield__wave { display: none; }
+
+    .ofield__lume,
+    .ofield__grid,
+    .ofield__glow,
+    .ofield__ring { animation: none; }
+
+    .ofield__grid { opacity: .7; }
+}
 
 /* --- reveal ----------------------------------------------------------------
    The product section's transition, to the millisecond, so a thing arriving
@@ -3926,15 +4322,22 @@ img, picture, video, canvas {
     position: absolute;
     left: 50%;
     top: 48%;
-    width: 250%;
+    width: 185%;
     aspect-ratio: 1;
     translate: -50% -50%;
     border-radius: 50%;
+    /* nearly solid white out to two fifths of its width, which was a hole cut
+       in the orbit field: the rings and the waves ran into it and stopped. It
+       still has to lift the device off the ground and still has to be the
+       brightest point in the section, so what changed is only how far the
+       white carries — tight around the shell, Ice from there out, and the
+       field visible underneath it the rest of the way. */
     background: radial-gradient(circle at 50% 50%,
-        rgba(255, 255, 255, .95) 0%,
-        rgba(214, 235, 243, .55) 38%,
-        rgba(185, 217, 225, .18) 62%,
-        rgba(185, 217, 225, 0) 78%);
+        rgba(255, 255, 255, .88) 0%,
+        rgba(255, 255, 255, .54) 26%,
+        rgba(214, 235, 243, .30) 46%,
+        rgba(185, 217, 225, .10) 66%,
+        rgba(185, 217, 225, 0) 80%);
 }
 
 .orbit__core .worb__device {
@@ -6970,14 +7373,29 @@ body.is-loaded .hero__stage { animation-delay: .1s; }
     .hero__stage .fcard { padding: .5rem .6rem; gap: .45rem; }
 }
 
-/* Hero cards: fully transparent at every size — no fill, no sheen, no blur */
+/* Hero cards: see-through, with a Deep Air Blue tint and a Deep Air Blue
+   edge. The room still reads through all six — the tint is a wash, not a
+   fill — and it is what holds the white type against a bright window. One
+   rule for every size and both hero grounds, so the six are identical on
+   desktop, tablet and phone. No blur behind them and no sheen on top: the
+   surface is the tint and the line around it, nothing else. */
 .hero__stage .fcard,
 .hero__stage .fcard:hover,
 .room.has-photo ~ .hero__inner .fcard,
 .room.has-photo ~ .hero__inner .fcard:hover {
-    background: transparent !important;
+    background: rgba(22, 50, 79, .42) !important;
+    border-color: rgba(22, 50, 79, .62) !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
+}
+
+/* the hover keeps the lift it always had, one step deeper */
+@media (hover: hover) and (pointer: fine) {
+    .hero__stage .fcard:hover,
+    .room.has-photo ~ .hero__inner .fcard:hover {
+        background: rgba(22, 50, 79, .52) !important;
+        border-color: rgba(22, 50, 79, .78) !important;
+    }
 }
 
 .hero__stage .fcard::before {
@@ -7309,4 +7727,141 @@ body.wa-away .totop { bottom: var(--fab-edge); }
 @media (prefers-reduced-motion: reduce) {
     .wa, .wa.is-away { transition: none; }
     .wa:hover { transform: none; }
+}
+
+/* ==========================================================================
+   THE HERO'S SECOND ACTION, ON TABLET AND PHONE
+   "How It Works" is an outline on clear glass, and on the wide layout it sits
+   over the quiet left side of the room where that reads. On the stacked
+   layouts the photograph comes in behind it — curtains, window light, the
+   family — and an outline alone had a busy picture running straight through
+   the type. A wash of Deep Air Blue behind it gives the letters a ground, and
+   the edge is the same colour at full strength so the shape stays defined.
+   Still see-through: the room reads through it, just quieted.
+
+   The wide layout is untouched, and so are the button's size, position, type
+   and behaviour at every size — this is a background and a border colour.
+   ========================================================================== */
+
+@media (max-width: 1200px) {
+    .hero .btn--ghost {
+        background: rgba(22, 50, 79, .46);
+        border-color: rgba(22, 50, 79, .72);
+    }
+
+    /* pressed: one step deeper, the same step the other buttons take */
+    .hero .btn--ghost:active { background: rgba(22, 50, 79, .58); }
+}
+
+/* --- "Get Air AQ", stacked --------------------------------------------------
+   A little more air above the button on tablet and phone, so it sits clear of
+   the line it follows instead of tucking straight under it. Spacing only:
+   nothing else in the slide moves, and the wide layout keeps the gap it had.
+   -------------------------------------------------------------------------- */
+@media (max-width: 1200px) {
+    .reel__cta,
+    .js-hstory .reel__cta { margin-top: clamp(2rem, 6vw, 2.75rem); }
+}
+
+
+
+/* ==========================================================================
+   PREMIUM PASS
+   Four changes, each where the page was working against itself. Nothing new
+   is introduced: no colour outside the palette, no component, no effect.
+   ========================================================================== */
+
+/* --- the bar, once the page has moved --------------------------------------
+   At the top it floats over the hero's own photograph at .06 white, which is
+   as light as it can be and still be seen. Past the first scroll it crosses
+   the counters, the product, a photographic render, two light sections and a
+   film — so it takes a little more of its own ground: Deep Air Blue at just
+   over half, more blur, and a hairline one step brighter. It is still glass,
+   and the room still reads through it; there is simply enough of it now that
+   the four links are legible over anything the page puts behind them.
+   -------------------------------------------------------------------------- */
+
+.nav__bar {
+    transition:
+        background-color .4s var(--ease),
+        border-color .4s var(--ease),
+        box-shadow .4s var(--ease),
+        backdrop-filter .4s var(--ease);
+}
+
+.nav.is-stuck .nav__bar {
+    background: rgba(16, 38, 64, .58);
+    border-color: rgba(185, 217, 225, .42);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+            backdrop-filter: blur(18px) saturate(140%);
+    box-shadow: 0 18px 40px -28px rgba(6, 20, 34, .9);
+}
+
+/* --- the film, unveiled, and the type given a ground -----------------------
+   Two Glacier washes were painted across the whole video — the section's
+   atmosphere from when its ground was a white gradient. Over a film they are
+   a haze on every part of the picture equally, including the product, which
+   is the one thing that should be clearest.
+
+   They are gone, and what takes their place is the opposite shape: Deep Air
+   Blue where the words are and nothing at all where the picture is. The
+   heading sits in the top fifth and the four stages' words in the lower
+   third, so the scrim is weighted to those two bands and clears completely
+   through the middle — the device, the room, the AI core all read at full
+   strength, and the type has its own ground rather than a veil over
+   everything. One layer, one palette colour, no blur.
+   -------------------------------------------------------------------------- */
+
+.howto__wash { display: none; }
+
+.howto__air {
+    -webkit-mask-image: none;
+            mask-image: none;
+    background: linear-gradient(180deg,
+        rgba(16, 38, 64, .58)  0%,
+        rgba(16, 38, 64, .40) 16%,
+        rgba(16, 38, 64, .12) 32%,
+        rgba(16, 38, 64, 0)   44%,
+        rgba(16, 38, 64, 0)   56%,
+        rgba(16, 38, 64, .20) 68%,
+        rgba(16, 38, 64, .46) 82%,
+        rgba(16, 38, 64, .60) 100%);
+}
+
+/* stacked, the words run the full height of the held screen rather than
+   sitting in two bands, so the scrim is even and a shade lighter */
+@media (max-width: 1200px) {
+    .howto__air {
+        background: linear-gradient(180deg,
+            rgba(16, 38, 64, .52)  0%,
+            rgba(16, 38, 64, .34) 26%,
+            rgba(16, 38, 64, .30) 60%,
+            rgba(16, 38, 64, .48) 100%);
+    }
+}
+
+/* motion turned down: the film is hidden and the section's own light
+   gradient is the ground again, so the scrim would darken white */
+@media (prefers-reduced-motion: reduce) {
+    .howto__air { background: none; }
+    .howto__wash { display: block; }
+}
+
+/* --- motion, held to what it is for ---------------------------------------
+   On a phone the cards are a static grid, so their float is already off. The
+   two things still looping behind content on a small screen are the section
+   washes, and they are the cheapest thing to stop: a 54vw radial gradient
+   being transformed every frame, for a drift of two percent that nobody
+   reading a phone screen is going to see.
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 767px) {
+    .airwave,
+    .product__bloom,
+    .assure__bloom,
+    .whyaq__bloom,
+    .contact__bloom,
+    .contact__ring,
+    .howto__wash,
+    .foot__glow { animation: none; }
 }
