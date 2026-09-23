@@ -1,11 +1,11 @@
 /* ==========================================================================
-   Air AQ — immersive product homepage
+   AQ Air — immersive product homepage
    Deep Air Blue #16324F · Glacier Blue #B9D9E1 (dominant)
    Turquoise #447F98 · Slate #629BB5 · Ice #D6EBF3 · Platinum #DADEE1 · White
    ========================================================================== */
 
 :root {
-    /* Air AQ palette — the long names are the canonical ones; the short
+    /* AQ Air palette — the long names are the canonical ones; the short
        aliases below them are what the rest of this sheet already uses. */
     --deep-air-blue: #16324F;
     --glacier-blue:  #B9D9E1;
@@ -222,6 +222,51 @@ img, picture, video, canvas {
     object-position: 72% 50%;
 }
 
+/* --------------------------------------------------------------------------
+   THE ROOM, AS FILM  (assets/video/herovideo.mp4)
+
+   The same box the photograph had and the same job: fill the hero at every
+   aspect without being stretched, and let the layers above it do the rest.
+   `inset: 0` is what makes it that box — `.room > *` hands it
+   `position: absolute`, and without the inset it would collapse to the
+   file's own frame and leave the hero short of it, which is the exact fault
+   the photograph's wrapper had. `object-fit: cover` then crops rather than
+   distorts, so no width and no height ever squashes it.
+
+   It opens transparent and is faded in on its first frame, so what is on
+   screen before then is the hero's own Deep Air Blue gradient rather than a
+   white plate. `background` is that same tone, for the frame between the box
+   existing and the film arriving in it. Nothing here has intrinsic size, so
+   there is no reflow when the file lands.
+   -------------------------------------------------------------------------- */
+
+.room__video {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* the film is framed the way the photograph was: the family and the
+       product held right of centre, the left wall kept clear for the
+       headline. At the desktop hero's own shape the file is very nearly an
+       exact fit and this does almost nothing; it earns its keep on a short
+       or a tall window, where cover has a crop to distribute and this is
+       what decides which way it goes. */
+    object-position: 72% 50%;
+    background: var(--deep-900);
+}
+
+/* The fade is gated on `html.js`, which the inline script in <head> writes
+   before the first paint. So the film only ever starts hidden where there is
+   something able to show it again: with no script it is simply there, at
+   full opacity, from the first frame the browser decodes. */
+html.js .room__video {
+    opacity: 0;
+    transition: opacity .7s var(--ease);
+}
+
+html.js .room__video.is-ready { opacity: 1; }
+
+
 .room.has-photo .room__wall,
 .room.has-photo .room__window,
 .room.has-photo .room__frame,
@@ -266,6 +311,60 @@ img, picture, video, canvas {
 
 .room.has-photo .room__grain { opacity: .08; }
 .room.has-photo .room__air   { opacity: .8; }
+
+/* The photograph's grade and grain are both `mix-blend-mode` layers spanning
+   the whole hero. Over a still that is one composite; over 25 or 30 frames a
+   second it is one per frame, across the full section, for as long as the
+   hero is on screen — which is exactly the sort of work that shows up as a
+   stutter in the scroll. The grain goes entirely, and the grade stays but
+   stops blending: same palette, drawn once as a flat gradient and then left
+   alone by the compositor.
+
+   Low alphas throughout, because this is a tint and not a dimmer — Deep Air
+   Blue held on the left where the copy is, Glacier and Turquoise carrying
+   through the right, which is the direction the grade always ran in. */
+.room.has-video .room__grain { display: none; }
+
+.room.has-video .room__grade {
+    mix-blend-mode: normal;
+    background: linear-gradient(102deg,
+        rgba(22, 50, 79, .30)    0%,
+        rgba(22, 50, 79, .16)   34%,
+        rgba(98, 155, 181, .07) 58%,
+        rgba(185, 217, 225, .08) 80%,
+        rgba(68, 127, 152, .12) 100%);
+}
+
+/* --- the overlay, and only as much of it as the type needs ----------------
+   The photograph's scrim was built to hold white text over a bright, static
+   interior, and it reached .95 at the left edge. A film is the thing being
+   looked at, so this is the lighter reading of the same shape: deep enough
+   under the headline, the paragraph and the two buttons to keep them at full
+   contrast, and clear of the right half entirely, where nothing but the
+   floating cards sits and those carry their own text shadows.
+   -------------------------------------------------------------------------- */
+
+.room.has-video .room__scrim {
+    background: linear-gradient(100deg,
+        rgba(9, 24, 40, .78)   0%,
+        rgba(11, 28, 47, .66) 24%,
+        rgba(11, 28, 47, .42) 40%,
+        rgba(11, 28, 47, .18) 54%,
+        rgba(11, 28, 47, .05) 68%,
+        rgba(11, 28, 47, 0)   80%);
+}
+
+/* the corners, a touch softer than the photograph asked for */
+.room.has-video .room__vignette {
+    background: radial-gradient(122% 98% at 60% 44%, rgba(11, 28, 47, 0) 58%, rgba(7, 20, 34, .30) 100%);
+}
+
+/* motion turned down: the film holds on its first frame — script.js never
+   starts it — so the tone and the framing are still the hero's, and nothing
+   in it moves. */
+@media (prefers-reduced-motion: reduce) {
+    .room__video { transition: none; }
+}
 
 /* over a bright interior the glass cards invert to a deep tint so they stay legible */
 /* over the photograph the cards stay clear glass; the window behind CO₂ and
@@ -2248,7 +2347,7 @@ img, picture, video, canvas {
     color: var(--on-dark-72);
 }
 
-/* --- sensors detect / AI understands / Air AQ alerts ---------------------- */
+/* --- sensors detect / AI understands / AQ Air alerts ---------------------- */
 
 .chain {
     width: var(--shell);
@@ -2492,6 +2591,18 @@ img, picture, video, canvas {
        scrim the whole of it was about a stop and a half too dark to read. */
     .room.has-photo .room__photo { opacity: .92; object-position: 70% 48%; }
 
+    /* Stacked, cover crops width rather than height, and it crops hard: a
+       16:9 film in a hero two and a half times taller than it is wide keeps
+       barely a third of its frame. Which third is the whole question — in
+       this file the product stands at 77-92% across and the family just left
+       of it, so the window is walked to the right to hold both, exactly as
+       the photograph's own 70% did for its own composition.
+
+       There is no portrait cut of the film to switch to the way there was a
+       portrait cut of the photograph, so this one value does that job, and
+       the tier below carries it further for the narrowest crop of all. */
+    .room.has-video .room__video { object-position: 78% 50%; }
+
     /* The copy stacks above the stage here, so the scrim is a vertical one:
        heavy across the top third, where the headline, the paragraph and the
        two buttons all have to hold against a bright interior; releasing
@@ -2509,6 +2620,24 @@ img, picture, video, canvas {
             rgba(11, 28, 47, .30) 64%,
             rgba(11, 28, 47, .34) 82%,
             rgba(11, 28, 47, .52) 100%);
+    }
+
+    /* stacked, the copy is across the top and the cards are below it, so the
+       overlay is vertical here too — the same shape as the photograph's, at
+       the film's weight: enough across the top third to hold the headline
+       and the buttons, and as good as clear through the middle, where the
+       film is the thing being looked at. It closes on the tone the fade
+       below it opens with, so the hero still arrives at the readings on one
+       colour meeting itself. */
+    .room.has-video .room__scrim {
+        background: linear-gradient(180deg,
+            rgba(9, 24, 40, .76)  0%,
+            rgba(9, 24, 40, .68)  26%,
+            rgba(11, 28, 47, .50) 40%,
+            rgba(11, 28, 47, .26) 52%,
+            rgba(11, 28, 47, .14) 64%,
+            rgba(11, 28, 47, .22) 82%,
+            rgba(11, 28, 47, .44) 100%);
     }
     :root { --shell: min(1300px, 100% - 2.5rem); }
 
@@ -2733,6 +2862,13 @@ img, picture, video, canvas {
 
 @media (max-width: 640px) {
     :root { --shell: min(1300px, 100% - 1.5rem); }
+
+    /* a 360px-wide hero keeps about a quarter of the film's width, the
+       narrowest window the page ever asks for. At 78% the product's right
+       edge lands on the crop; this holds it inside the frame with the family
+       beside it, and gives up the empty left of the room — which is under
+       the scrim and the headline in any case. */
+    .room.has-video .room__video { object-position: 90% 50%; }
 
     .nav__bar { padding: .5rem .5rem .5rem .9rem; }
     .brand__name { font-size: 1rem; }
@@ -3605,7 +3741,7 @@ img, picture, video, canvas {
 }
 
 /* ==========================================================================
-   WHY CHOOSE AIR AQ
+   WHY CHOOSE AQ AIR
 
    The page's first light section. Everything above it is Deep Air Blue, so
    the only thing that matters at the top edge is that there is no edge: the
@@ -3769,7 +3905,7 @@ img, picture, video, canvas {
     filter: blur(22px);
 }
 /* ═══ the air orbit environment ═════════════════════════════════════════════
-   The background of Why Air AQ, and only the background. The eyebrow, the
+   The background of Why AQ Air, and only the background. The eyebrow, the
    heading, the lead, the device, the six benefits, their icons, their numbers
    and the connector lines are untouched — nothing below moves any of them,
    nothing below is in the flow, and every part of it is inert.
@@ -4598,7 +4734,7 @@ img, picture, video, canvas {
 
 
 /* ==========================================================================
-   HOW AIR AQ WORKS
+   HOW AQ AIR WORKS
    Light section, opening on the Pure White the section above closes on.
    ========================================================================== */
 
@@ -5442,7 +5578,7 @@ img, picture, video, canvas {
    CONTACT
 
    The page's last section, and its way back into the dark. Everything since
-   Why Choose Air AQ has been light; this opens on the exact value How Air AQ
+   Why Choose AQ Air has been light; this opens on the exact value How AQ Air
    Works closes on (#EAF4F9) and walks down to Deep Air Blue over a fixed
    distance, so the join is one colour continuing rather than a line — the
    same move .whyaq makes in the other direction, and named the same way so
@@ -5615,7 +5751,7 @@ img, picture, video, canvas {
 }
 
 /* --- the photograph ----------------------------------------------------------
-   contact.jpg, the Air AQ on a desk in a blue-lit room, across the whole
+   contact.jpg, the AQ Air on a desk in a blue-lit room, across the whole
    section: `cover`, so it fills any shape the section takes without being
    stretched, and anchored right of centre so the product stays in frame as
    narrow screens crop the sides away.
@@ -7409,7 +7545,7 @@ body.is-loaded .hero__stage { animation-delay: .1s; }
    animation or a background — only how things sit at a given size.
    ========================================================================== */
 
-/* --- How Air AQ Works, stacked: the film is one screen, held ---------------
+/* --- How AQ Air Works, stacked: the film is one screen, held ---------------
    On the wide layout the story is pinned, so the film is always one screen
    of 16:9 video. Below 1200px there is no pin and the film was stretched over
    the whole stacked section, ~1700px of it — `cover` then blew a 720p frame
@@ -7507,7 +7643,7 @@ body.is-loaded .hero__stage { animation-delay: .1s; }
    section titles (the product heading was the largest type on the page on a
    phone, larger than the hero's own, and ran to four lines), leads a touch
    smaller, and the gaps that were sized for a desktop — between stacked
-   steps, around the Why Air AQ cards, above and below sections — brought to
+   steps, around the Why AQ Air cards, above and below sections — brought to
    what the content needs. Spacing is reduced, never removed.
    ========================================================================== */
 
@@ -7525,7 +7661,7 @@ body.is-loaded .hero__stage { animation-delay: .1s; }
 }
 
 @media (max-width: 1080px) {
-    /* Why Air AQ once it has become a grid: the ends and the gaps between
+    /* Why AQ Air once it has become a grid: the ends and the gaps between
        the six were still the desktop orbit's */
     .whyaq { padding: calc(clamp(3rem, 7vw, 4rem) + var(--whyaq-pull)) 0 clamp(3rem, 7vw, 4rem); }
     .orbit {
@@ -7595,7 +7731,7 @@ body.is-loaded .hero__stage { animation-delay: .1s; }
 html { overflow-x: clip; }
 
 /* ==========================================================================
-   HOW AIR AQ WORKS — THE FILM AT EVERY SCREEN SHAPE
+   HOW AQ AIR WORKS — THE FILM AT EVERY SCREEN SHAPE
    The film is always exactly one screen: pinned on the wide layout, and a
    held one-screen layer on the stacked ones. `cover` then does the sizing
    from the screen's own width and height — scaled until the 16:9 frame fills
@@ -7632,7 +7768,7 @@ html { overflow-x: clip; }
    WHATSAPP
    The official glyph on WhatsApp's own green, as a single disc in the
    bottom-right corner — the one mark on the page in a colour that is not
-   Air AQ's, which is the point: it is recognised at a glance. Everything
+   AQ Air's, which is the point: it is recognised at a glance. Everything
    around the green is the page's: the same edge distance and depth of shadow
    as the back-to-top button, the same easing, a hairline of light on the rim.
 
@@ -7753,7 +7889,7 @@ body.wa-away .totop { bottom: var(--fab-edge); }
     .hero .btn--ghost:active { background: rgba(22, 50, 79, .58); }
 }
 
-/* --- "Get Air AQ", stacked --------------------------------------------------
+/* --- "Get AQ Air", stacked --------------------------------------------------
    A little more air above the button on tablet and phone, so it sits clear of
    the line it follows instead of tucking straight under it. Spacing only:
    nothing else in the slide moves, and the wide layout keeps the gap it had.

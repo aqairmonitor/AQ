@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Air AQ continuously monitors the air around you, detects abnormal air-quality conditions, and uses AI to help you understand what is happening.">
-    <title>Air AQ — Know the Air You Breathe</title>
+    <meta name="description" content="AQ Air continuously monitors the air around you, detects abnormal air-quality conditions, and uses AI to help you understand what is happening.">
+    <title>AQ Air — Know the Air You Breathe</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
@@ -14,8 +14,10 @@
     <script src="https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.min.js" defer></script>
     <script src="script.js" defer></script>
     <script>
-        /* the overlay only exists when JS can take it away again */
-        document.documentElement.classList.add('pre-on');
+        /* the overlay only exists when JS can take it away again — and the
+           hero's film only ever starts hidden where there is a script able
+           to show it, which is what this second class says */
+        document.documentElement.classList.add('pre-on', 'js');
 
 
         (function () {
@@ -81,7 +83,7 @@
 <!-- ═══ PRELOADER ═══════════════════════════════════════════════════════
      Paints before anything else, holds for a beat while the page settles,
      then fades out to leave the hero already standing behind it. -->
-<div class="pre" id="preloader" role="status" aria-label="Loading Air AQ">
+<div class="pre" id="preloader" role="status" aria-label="Loading AQ Air">
 
     <!-- air being drawn in: five soft motes drifting toward the mark -->
     <div class="pre__air" aria-hidden="true">
@@ -100,7 +102,7 @@
                 <path d="M6 19h14a3.5 3.5 0 1 1-3.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
             </svg>
         </span>
-        <span class="pre__name">Air<span>AQ</span></span>
+        <span class="pre__name">AQ<span>Air</span></span>
     </div>
 
     <div class="pre__bar" aria-hidden="true"><i class="pre__fill"></i></div>
@@ -118,23 +120,26 @@
 <div class="hero">
 
     <!-- the room -->
-    <div class="room has-photo" aria-hidden="true">
-        <!-- Two shots of the same room, one per shape of hero.
+    <div class="room has-photo has-video" aria-hidden="true">
+        <!-- The room is a film now. It is the same backdrop the photograph
+             was — one layer, `object-fit: cover`, behind everything the hero
+             draws — so every layer over it (the tint, the scrim, the air, the
+             dust, the vignette and the fade into Deep Air Blue) is untouched
+             and the composition above it never moves.
 
-             The wide file is 1672x941; the hero keeps its two-column desktop
-             layout down to 1200px and is about that shape, so it fits. Below
-             1200px the hero stacks into a single tall column, and covering a
-             tall box with a 16:9 photograph throws most of the frame away —
-             so the portrait file (1024x1536) takes over at exactly the width
-             the layout changes, and the crop stays a crop rather than a
-             detail. The browser picks one and downloads only that one. -->
-        <picture>
-            <source media="(max-width: 1200px)" srcset="assets/image/bgrespons.png"
-                    width="1024" height="1536">
-            <img class="room__photo" src="assets/image/baground.png" alt=""
-                 width="1672" height="941" fetchpriority="high" decoding="async"
-                 onerror="this.closest('.room').classList.remove('has-photo'); this.remove();">
-        </picture>
+             `muted` and `playsinline` are what let it start by itself; they
+             are in the markup rather than set from script so the browser has
+             them before it ever considers the autoplay. It opens at zero
+             opacity and is faded in by script.js the moment it has a frame,
+             which is what keeps the first paint free of a flash — and with
+             the box fixed by `inset: 0`, nothing it does can shift the
+             layout. Should the file be missing, the class goes with it and
+             the vector room below renders exactly as it always did. -->
+        <video class="room__video" id="hero-video"
+               src="assets/video/herovideo.mp4"
+               autoplay muted loop playsinline
+               preload="auto" disablepictureinpicture tabindex="-1"
+               onerror="this.closest('.room').classList.remove('has-photo','has-video'); this.remove();"></video>
         <div class="room__grade"></div>
         <div class="room__wall"></div>
         <div class="room__window"></div>
@@ -212,7 +217,7 @@
                         <path d="M6 19h14a3.5 3.5 0 1 1-3.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                     </svg>
                 </span>
-                <span class="brand__name">Air<span>AQ</span></span>
+                <span class="brand__name">AQ<span>Air</span></span>
             </a>
 
             <nav class="nav__links" id="nav-menu" aria-label="Primary">
@@ -222,7 +227,7 @@
                 <a href="#">Support</a>
             </nav>
 
-            <a class="nav__cta" href="#">Get Air AQ</a>
+            <a class="nav__cta" href="#">Get AQ Air</a>
 
             <!-- the small-screen way into the same four links. Hidden on the
                  wide layout, where the links are already in the bar. -->
@@ -243,14 +248,14 @@
             </h1>
 
             <p class="hero__desc">
-                Air AQ continuously monitors the air around you, detects abnormal
+                AQ Air continuously monitors the air around you, detects abnormal
                 air-quality conditions, and uses AI to help you understand what is
                 happening—so you can take action when it matters.
             </p>
 
             <div class="hero__actions">
                 <a class="btn btn--primary" href="#">
-                    Discover Air AQ
+                    Discover AQ Air
                     <svg class="btn__arrow" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                         <path d="M4 10h11m0 0-4.2-4.2M15 10l-4.2 4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
@@ -371,7 +376,7 @@
      Blue the hero dissolves into, so the two meet on one tone with nothing
      overlapping the hero.
      ═══════════════════════════════════════════════════════════════════════ -->
-<section class="airdata" id="air-data" aria-label="Air AQ live data">
+<section class="airdata" id="air-data" aria-label="AQ Air live data">
 
     <!-- the air itself: three very soft, slow currents and a drift of motes.
          All of it is gradient and transform work — no blur filters, nothing
@@ -519,7 +524,7 @@
                 <!-- drop a render at assets/image/product.png and add class "has-photo"
                      to the parent to use it in place of the vector device below -->
 
-                    <svg class="device pdevice" viewBox="0 0 530 525" role="img" aria-label="The Air AQ indoor air-quality monitor">
+                    <svg class="device pdevice" viewBox="0 0 530 525" role="img" aria-label="The AQ Air indoor air-quality monitor">
                         <defs>
                             <linearGradient id="pShell" x1=".05" y1="0" x2=".95" y2=".55">
                                 <stop offset="0%" stop-color="#FFFFFF"/>
@@ -656,7 +661,7 @@
                         </g>
                         <rect x="66.6" y="116.6" width="344.8" height="321.8" rx="65.4" fill="none" stroke="#FFFFFF" stroke-opacity=".9"/>
 
-                        <text class="pd__brand" x="239" y="235" text-anchor="middle">Air AQ</text>
+                        <text class="pd__brand" x="239" y="235" text-anchor="middle">AQ Air</text>
                         <circle cx="239" cy="374" r="17.5" fill="none" stroke="#48C7F2" stroke-width="3.4" opacity=".55" filter="url(#pBloomV)"/>
                         <circle cx="239" cy="374" r="17.5" fill="none" stroke="#3FC5EE" stroke-width="3.2"/>
 
@@ -757,8 +762,8 @@
 
     </div>
 
-    <!-- sensors detect -> AI understands -> Air AQ alerts -->
-    <ol class="chain" aria-label="How Air AQ works">
+    <!-- sensors detect -> AI understands -> AQ Air alerts -->
+    <ol class="chain" aria-label="How AQ Air works">
         <li class="chain__step" data-reveal>
             <span class="chain__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="8" y="3" width="8" height="18" rx="4" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="9" r="1.6" fill="currentColor"/></svg></span>
             <span class="chain__text">Sensors Detect</span>
@@ -769,7 +774,7 @@
         </li>
         <li class="chain__step" data-reveal style="--d:240ms">
             <span class="chain__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M6.5 10a5.5 5.5 0 1 1 11 0c0 4 1.5 5.4 1.5 5.4H5S6.5 14 6.5 10Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M10.2 18.4a2 2 0 0 0 3.6 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
-            <span class="chain__text">Air AQ Alerts</span>
+            <span class="chain__text">AQ Air Alerts</span>
         </li>
     </ol>
 
@@ -833,9 +838,9 @@
 
                     <div class="reel__copy">
                         <h2 class="reel__title" data-reveal>One Device. Protection for Every Space.</h2>
-                        <p class="reel__line" data-reveal style="--d:120ms">Air AQ stays with the spaces that matter most—from the rooms where your family rests to the places you work, cook, and travel. Continuous monitoring helps you stay aware of the air around you, wherever life happens.</p>
+                        <p class="reel__line" data-reveal style="--d:120ms">AQ Air stays with the spaces that matter most—from the rooms where your family rests to the places you work, cook, and travel. Continuous monitoring helps you stay aware of the air around you, wherever life happens.</p>
                         <a class="btn btn--solid reel__cta" href="#" data-reveal style="--d:240ms">
-                            Get Air AQ
+                            Get AQ Air
                             <svg class="btn__arrow" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                                 <path d="M4 10h11m0 0-4.2-4.2M15 10l-4.2 4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
@@ -845,7 +850,7 @@
                     <figure class="reel__shot">
                         <picture>
                             <source srcset="assets/image/spaces/img1.webp" type="image/webp">
-                            <img src="assets/image/img1.png" alt="A family in an open-plan living room, with the Air AQ monitor on a side table beside the sofa" loading="lazy" decoding="async" width="1672" height="941">
+                            <img src="assets/image/img1.png" alt="A family in an open-plan living room, with the AQ Air monitor on a side table beside the sofa" loading="lazy" decoding="async" width="1672" height="941">
                         </picture>
                         <figcaption class="reel__shot-words">
                             <h3 class="reel__shot-title">Where Your Family Breathes</h3>
@@ -857,11 +862,11 @@
                     <figure class="reel__shot">
                         <picture>
                             <source srcset="assets/image/spaces/img2.png" type="image/png">
-                            <img src="assets/image/img2.png" alt="A couple driving through city traffic, the Air AQ monitor on the dashboard" loading="lazy" decoding="async" width="1536" height="1024">
+                            <img src="assets/image/img2.png" alt="A couple driving through city traffic, the AQ Air monitor on the dashboard" loading="lazy" decoding="async" width="1536" height="1024">
                         </picture>
                         <figcaption class="reel__shot-words">
                             <h3 class="reel__shot-title">The Air You Travel In</h3>
-                            <p class="reel__shot-line">Air AQ reads the cabin on the move and says when to close the vents.</p>
+                            <p class="reel__shot-line">AQ Air reads the cabin on the move and says when to close the vents.</p>
                         </figcaption>
                     </figure>
 
@@ -869,7 +874,7 @@
                     <figure class="reel__shot">
                         <picture>
                             <source srcset="assets/image/spaces/img3.png" type="image/png">
-                            <img src="assets/image/img3.png" alt="A man at an office desk checking the Air AQ app, an alert showing the living room reading as good" loading="lazy" decoding="async" width="1536" height="1024">
+                            <img src="assets/image/img3.png" alt="A man at an office desk checking the AQ Air app, an alert showing the living room reading as good" loading="lazy" decoding="async" width="1536" height="1024">
                         </picture>
                         <figcaption class="reel__shot-words">
                             <h3 class="reel__shot-title">Home, From Anywhere</h3>
@@ -886,7 +891,7 @@
 </section>
 
 
-<!-- ═══ WHY CHOOSE AIR AQ ═══════════════════════════════════════════════
+<!-- ═══ WHY CHOOSE AQ AIR ═══════════════════════════════════════════════
      The page's first light section, and the join is the whole trick: the
      trust render closes on a pale blue floor, so this one opens on that
      same Glacier and walks up to white over its first third. Nothing marks
@@ -911,9 +916,9 @@
     <div class="whyaq__inner">
 
         <header class="whyaq__head">
-            <p class="whyaq__eyebrow" data-reveal>Why Air AQ</p>
+            <p class="whyaq__eyebrow" data-reveal>Why AQ Air</p>
             <h2 class="whyaq__title" data-reveal style="--d:110ms">More Than a Monitor. A Smarter Way to Understand Your&nbsp;Air.</h2>
-            <p class="whyaq__lead" data-reveal style="--d:220ms">Air AQ turns continuous air-quality readings into clear, useful information—helping you understand what’s happening around you and when it needs your attention.</p>
+            <p class="whyaq__lead" data-reveal style="--d:220ms">AQ Air turns continuous air-quality readings into clear, useful information—helping you understand what’s happening around you and when it needs your attention.</p>
         </header>
 
         <!-- the stage. 1200 × 780 is the coordinate space; the SVG is drawn
@@ -995,7 +1000,7 @@
             <div class="orbit__core">
                 <div class="orbit__halo" data-reveal style="--d:260ms" aria-hidden="true"></div>
                 <div class="orbit__mark" id="why-mark" aria-hidden="true"></div>
-            <svg class="device pdevice worb__device" data-reveal style="--d:300ms" viewBox="0 0 530 525" role="img" aria-label="The Air AQ indoor air-quality monitor">
+            <svg class="device pdevice worb__device" data-reveal style="--d:300ms" viewBox="0 0 530 525" role="img" aria-label="The AQ Air indoor air-quality monitor">
                 <defs>
                     <linearGradient id="pShellW" x1=".05" y1="0" x2=".95" y2=".55">
                         <stop offset="0%" stop-color="#FFFFFF"/>
@@ -1132,7 +1137,7 @@
                 </g>
                 <rect x="66.6" y="116.6" width="344.8" height="321.8" rx="65.4" fill="none" stroke="#FFFFFF" stroke-opacity=".9"/>
 
-                <text class="pd__brand" x="239" y="235" text-anchor="middle">Air AQ</text>
+                <text class="pd__brand" x="239" y="235" text-anchor="middle">AQ Air</text>
                 <circle cx="239" cy="374" r="17.5" fill="none" stroke="#48C7F2" stroke-width="3.4" opacity=".55" filter="url(#pBloomVW)"/>
                 <circle cx="239" cy="374" r="17.5" fill="none" stroke="#3FC5EE" stroke-width="3.2"/>
 
@@ -1179,7 +1184,7 @@
                         <span class="wcard__no">02</span>
                     </div>
                     <h3 class="wcard__title">Continuous Awareness</h3>
-                    <p class="wcard__line">Air AQ continuously monitors your environment without requiring constant manual checking.</p>
+                    <p class="wcard__line">AQ Air continuously monitors your environment without requiring constant manual checking.</p>
                 </article>
             </div>
 
@@ -1233,7 +1238,7 @@
 </section>
 
 
-<!-- ═══ HOW AIR AQ WORKS ════════════════════════════════════════════════
+<!-- ═══ HOW AQ AIR WORKS ════════════════════════════════════════════════
      The whole method on one held screen: the air, the device that reads it,
      what the reading becomes, and the alert that reaches you. Four stages on
      one line, and the line is the story — it travels left to right as the
@@ -1272,7 +1277,7 @@
             </div>
 
             <header class="howto__head">
-                <h2 class="howto__title" data-reveal style="--d:60ms">How Air AQ Works</h2>
+                <h2 class="howto__title" data-reveal style="--d:60ms">How AQ Air Works</h2>
                 <p class="howto__lead" data-reveal style="--d:160ms">From the air around you to insights you can act on.</p>
             </header>
 
@@ -1388,7 +1393,7 @@
 
                     <p class="step__no">02</p>
                     <h3 class="step__title">Analyze</h3>
-                    <p class="step__copy">Air AQ processes sensor readings continuously to identify unusual patterns and changes in your environment.</p>
+                    <p class="step__copy">AQ Air processes sensor readings continuously to identify unusual patterns and changes in your environment.</p>
                 </article>
 
                 <!-- ── 03 · UNDERSTAND ──────────────────────────────────── -->
@@ -1439,7 +1444,7 @@
                                         <svg viewBox="0 0 24 24" fill="none"><path d="M4 9h9.5a3 3 0 1 0-3-3M4 14h13a3.2 3.2 0 1 1-3.2 3.2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
                                     </span>
                                     <span class="hnote__body">
-                                        <span class="hnote__top"><span class="hnote__app">Air AQ Alert</span><span class="hnote__now">now</span></span>
+                                        <span class="hnote__top"><span class="hnote__app">AQ Air Alert</span><span class="hnote__now">now</span></span>
                                         <span class="hnote__text">Air quality has changed in your room.</span>
                                     </span>
                                 </div>
@@ -1467,7 +1472,7 @@
 
 <!-- ═══ CONTACT ═════════════════════════════════════════════════════════
      The page's last section, and its way back into the dark. It starts on a
-     clean, straight break: How Air AQ Works ends on the edge of its film and
+     clean, straight break: How AQ Air Works ends on the edge of its film and
      this opens directly on its own Deep Air Blue and photograph — no fade
      between the two.
 
@@ -1523,7 +1528,7 @@
         <div class="contact__intro">
             <p class="contact__eyebrow" data-reveal>Get in Touch</p>
             <h2 class="contact__title" data-reveal style="--d:80ms">Let&rsquo;s Talk About Better&nbsp;Air.</h2>
-            <p class="contact__lead" data-reveal style="--d:160ms">Whether you have questions about Air AQ, need product support, or want to explore Air AQ for your home or business, we&rsquo;re here to help.</p>
+            <p class="contact__lead" data-reveal style="--d:160ms">Whether you have questions about AQ Air, need product support, or want to explore AQ Air for your home or business, we&rsquo;re here to help.</p>
 
             <ul class="contact__ways">
                 <li class="cway" data-reveal style="--d:260ms">
@@ -1535,7 +1540,7 @@
                     </span>
                     <span class="cway__body">
                         <span class="cway__name">General Enquiries</span>
-                        <span class="cway__line">Questions about Air AQ, how it works, and what it reads.</span>
+                        <span class="cway__line">Questions about AQ Air, how it works, and what it reads.</span>
                         <a class="cway__link" href="mailto:hello@airaq.com">hello@airaq.com</a>
                     </span>
                 </li>
@@ -1565,7 +1570,7 @@
                     </span>
                     <span class="cway__body">
                         <span class="cway__name">Business &amp; Partnerships</span>
-                        <span class="cway__line">Air AQ across offices, buildings, fleets and retail.</span>
+                        <span class="cway__line">AQ Air across offices, buildings, fleets and retail.</span>
                         <a class="cway__link" href="mailto:partners@airaq.com">partners@airaq.com</a>
                     </span>
                 </li>
@@ -1683,28 +1688,28 @@
                             <path d="M6 19h14a3.5 3.5 0 1 1-3.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                         </svg>
                     </span>
-                    <span class="brand__name">Air<span>AQ</span></span>
+                    <span class="brand__name">AQ<span>Air</span></span>
                 </a>
 
                 <p class="foot__statement">Know the Air You Breathe. Protect What&nbsp;Matters.</p>
-                <p class="foot__note">Air AQ continuously monitors your indoor environment and turns air-quality data into clear insights you can understand and act on.</p>
+                <p class="foot__note">AQ Air continuously monitors your indoor environment and turns air-quality data into clear insights you can understand and act on.</p>
 
                 <!-- PLACEHOLDER: no accounts are wired up yet. Point each href
                      at the real profile — or delete the ones that never exist. -->
                 <ul class="fsocial">
-                    <li><a href="#" aria-label="Air AQ on LinkedIn">
+                    <li><a href="#" aria-label="AQ Air on LinkedIn">
                         <svg viewBox="0 0 24 24" fill="none">
                             <rect x="3.5" y="3.5" width="17" height="17" rx="3.4" stroke="currentColor" stroke-width="1.5"/>
                             <path d="M7.6 10.2v6.2M7.6 7.6v.1M11.6 16.4v-6.2m0 2.2a2.4 2.4 0 0 1 4.8 0v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                         </svg>
                     </a></li>
-                    <li><a href="#" aria-label="Air AQ on X">
+                    <li><a href="#" aria-label="AQ Air on X">
                         <svg viewBox="0 0 24 24" fill="none">
                             <rect x="3.5" y="3.5" width="17" height="17" rx="3.4" stroke="currentColor" stroke-width="1.5"/>
                             <path d="m8 8 8 8M16 8l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                         </svg>
                     </a></li>
-                    <li><a href="#" aria-label="Air AQ on YouTube">
+                    <li><a href="#" aria-label="AQ Air on YouTube">
                         <svg viewBox="0 0 24 24" fill="none">
                             <rect x="2.8" y="5.6" width="18.4" height="12.8" rx="3.6" stroke="currentColor" stroke-width="1.5"/>
                             <path d="M10.6 9.6 15 12l-4.4 2.4V9.6Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
@@ -1721,7 +1726,7 @@
                     <li><a href="#air-data">Technology</a></li>
                     <li><a href="#trust">Air Science</a></li>
                     <li><a href="#how-it-works">How It Works</a></li>
-                    <li><a href="#why-air-aq">Why Air AQ</a></li>
+                    <li><a href="#why-air-aq">Why AQ Air</a></li>
                 </ul>
             </nav>
 
@@ -1740,7 +1745,7 @@
             <!-- ── 4 · stay connected ────────────────────────────────── -->
             <div class="fcol foot__news" data-reveal style="--d:280ms">
                 <h2 class="fcol__title">Stay Connected</h2>
-                <p class="foot__news-line">Get Air AQ updates, indoor air-quality insights, and product news.</p>
+                <p class="foot__news-line">Get AQ Air updates, indoor air-quality insights, and product news.</p>
 
                 <form class="fnews" novalidate>
                     <label class="fnews__label" for="foot-email">Email address</label>
@@ -1761,7 +1766,7 @@
 
         <!-- ── the bottom bar ────────────────────────────────────────── -->
         <div class="foot__bar">
-            <p class="foot__copy">&copy; 2026 Air AQ. All rights reserved.</p>
+            <p class="foot__copy">&copy; 2026 AQ Air. All rights reserved.</p>
             <p class="foot__legal">
                 <a href="#">Privacy Policy</a>
                 <span aria-hidden="true">&middot;</span>
@@ -1793,9 +1798,9 @@
 <a class="wa" id="wa-chat"
    href="https://wa.me/"
    data-wa-number=""
-   data-wa-text="Hi Air AQ, I'd like to know more about Air AQ."
+   data-wa-text="Hi AQ Air, I'd like to know more about AQ Air."
    target="_blank" rel="noopener"
-   aria-label="Chat with Air AQ on WhatsApp">
+   aria-label="Chat with AQ Air on WhatsApp">
     <svg class="wa__icon" viewBox="0 0 32 32" aria-hidden="true">
         <path fill="currentColor" d="M16.004 3.2C8.94 3.2 3.2 8.938 3.2 16c0 2.26.593 4.466 1.72 6.41L3.2 28.8l6.57-1.69A12.77 12.77 0 0 0 16.004 28.8C23.066 28.8 28.8 23.062 28.8 16S23.066 3.2 16.004 3.2Zm0 23.43c-1.93 0-3.82-.52-5.47-1.5l-.39-.23-3.9 1.004 1.04-3.8-.255-.4A10.56 10.56 0 0 1 5.4 16c0-5.85 4.76-10.61 10.604-10.61 5.846 0 10.6 4.76 10.6 10.61 0 5.85-4.754 10.63-10.6 10.63Zm5.81-7.95c-.318-.16-1.884-.93-2.176-1.036-.292-.106-.504-.16-.716.16-.213.318-.822 1.036-1.008 1.248-.186.213-.371.24-.689.08-.318-.16-1.344-.495-2.56-1.58-.946-.845-1.585-1.888-1.77-2.207-.186-.318-.02-.49.14-.649.143-.142.318-.371.477-.557.16-.186.212-.318.318-.531.106-.212.053-.398-.026-.557-.08-.16-.716-1.726-.981-2.363-.258-.62-.52-.536-.716-.546-.186-.009-.398-.011-.61-.011a1.17 1.17 0 0 0-.849.398c-.292.318-1.114 1.088-1.114 2.654 0 1.566 1.14 3.08 1.3 3.292.159.212 2.245 3.43 5.44 4.81.76.328 1.353.524 1.815.67.763.243 1.457.209 2.006.127.612-.091 1.884-.77 2.15-1.513.265-.743.265-1.38.186-1.513-.08-.133-.292-.212-.61-.371Z"/>
     </svg>

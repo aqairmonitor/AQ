@@ -1,4 +1,4 @@
-/* ═══ Air AQ — one script, one pass ═══════════════════════════════════════
+/* ═══ AQ Air — one script, one pass ═══════════════════════════════════════
    Everything the page needs, sharing cached DOM references and a single
    observer per job. No library, no polling, no work while off-screen.      */
 (function () {
@@ -85,6 +85,86 @@
         };
 
         requestAnimationFrame(preTick);
+    }
+
+    /* ── 0b. the hero's film ──────────────────────────────────────────────
+       The backdrop is a video now, and the whole of this is about making it
+       cost nothing more than the photograph did.
+
+       It arrives: the markup already carries `autoplay muted playsinline`,
+       so in the ordinary case the browser has it running before this code
+       is reached. `play()` is called anyway and its rejection swallowed,
+       because a browser that declines the attribute-driven autoplay will
+       usually accept the explicit call, and one that declines both leaves
+       the first frame standing — which is a still backdrop, not a hole. The
+       element is only faded in once there is a frame to show, so nothing is
+       ever seen half-painted; `readyState` is checked as well as the event,
+       since a cached file can be ready before the listener is attached.
+
+       It stops: a film that keeps decoding while the page is eight sections
+       further down is pure waste — every frame is a decode and a composite
+       for something nobody is looking at. So it plays only while the hero is
+       actually near the screen, and only while the tab is in front. Those
+       are the two conditions, `heroNear` and the document's visibility, and
+       `filmSync` is the one place either of them turns into play or pause.
+
+       It respects a preference: with motion turned down the film holds on
+       its first frame. The hero keeps the tone and the framing it was drawn
+       with, and nothing in it moves.                                       */
+    var heroFilm = doc.getElementById('hero-video');
+    if (heroFilm) {
+        var heroNear = true;
+        var heroOn   = false;
+
+        /* the attributes say all three already; setting them again is for
+           the browsers that only honour the property */
+        heroFilm.muted = true;
+        heroFilm.defaultMuted = true;
+        heroFilm.playsInline = true;
+
+        var filmShow = function () {
+            heroFilm.classList.add('is-ready');
+        };
+
+        /* `loadeddata` is the first moment there is a picture. A file served
+           from cache can be past it before this line runs, hence the check. */
+        if (heroFilm.readyState >= 2) filmShow();
+        heroFilm.addEventListener('loadeddata', filmShow);
+        heroFilm.addEventListener('canplay', filmShow);
+
+        var filmSync = function () {
+            var want = heroNear && !doc.hidden && !reduce;
+            if (want === heroOn) return;
+            heroOn = want;
+
+            if (want) {
+                var p = heroFilm.play();
+                /* a refused autoplay is not an error to handle — the frame
+                   that is already on screen is the backdrop either way */
+                if (p && p.catch) p.catch(function () {});
+            } else {
+                heroFilm.pause();
+            }
+        };
+
+        if (reduce) {
+            /* one frame, and then it is a still */
+            heroFilm.removeAttribute('autoplay');
+            heroFilm.loop = false;
+            heroFilm.pause();
+        }
+
+        if (hasIO) {
+            /* the hero itself, with a screen's worth of margin, so the film
+               is already running again before it is back in view */
+            new IntersectionObserver(function (entries) {
+                heroNear = entries[0].isIntersecting;
+                filmSync();
+            }, { rootMargin: '200px 0px' }).observe(heroFilm.closest('.hero') || heroFilm);
+        }
+
+        doc.addEventListener('visibilitychange', filmSync);
+        filmSync();
     }
 
     /* ── 0. smooth scroll ─────────────────────────────────────────────────
@@ -526,7 +606,7 @@
     var flyStory  = doc.getElementById('trust-reel');
     var flyStage  = doc.getElementById('product-showcase');
     var flyAir    = doc.querySelector('.assure');
-    /* act three's landing: the empty box in the middle of the Why Choose Air AQ
+    /* act three's landing: the empty box in the middle of the Why Choose AQ Air
        orbit. Optional — with it absent the journey ends where it always did. */
     var flyWhy    = doc.getElementById('why-mark');
     var flyWhyAir = doc.querySelector('.whyaq');
@@ -616,7 +696,7 @@
             var dock = flyMark.getBoundingClientRect();
             if (!home.width || !dock.width) return;
 
-            /* ---- act three: down into Why Choose Air AQ ------------------
+            /* ---- act three: down into Why Choose AQ Air ------------------
                The same device, carried on down. Two things make it one
                continuous move rather than a hand-off:
 
@@ -762,7 +842,7 @@
             flyOn = true;
             flyPaint();                 /* place it *before* it goes fixed */
             flyDevice.classList.add('is-flying');
-            /* the Why Choose Air AQ section shows the mark instead of its own
+            /* the Why Choose AQ Air section shows the mark instead of its own
                vector only while this is on the page */
             body.classList.add('js-fly');
         };
@@ -840,7 +920,7 @@
         flySync();
     }
 
-    /* ── 6. how Air AQ works ──────────────────────────────────────────────
+    /* ── 6. how AQ Air works ──────────────────────────────────────────────
        One line crossing four stages. On the wide layout the section pins and
        the line is scrubbed by the scroll itself: each stage owns a slice of
        the run, and `--sp` — the only value written per frame — is how far
@@ -1258,7 +1338,7 @@
         }
     }
 
-    /* ── 8b. Why Air AQ finishes before How It Works arrives ─────────────
+    /* ── 8b. Why AQ Air finishes before How It Works arrives ─────────────
        The six benefits and their lines come in on their own timers once the
        device has landed, and a quick wheel could carry the reader into How It
        Works while they were still arriving. So the scroll is held, briefly,
@@ -1394,7 +1474,7 @@
             for (var w = 0; w < waAvoid.length; w++) waIO.observe(waAvoid[w]);
         }
     }
-    /* ── 8d. the Why Air AQ air orbit environment ─────────────────────────
+    /* ── 8d. the Why AQ Air air orbit environment ─────────────────────────
        Three jobs, all of them on the background of that section and none of
        them on its content. The heading, the lead, the product, the six
        benefits, their icons, their numbers and the connector lines are not
