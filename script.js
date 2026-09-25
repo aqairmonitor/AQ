@@ -458,116 +458,6 @@
         settle();
     }
 
-    /* ── 5. the use-case carousel ─────────────────────────────────────────
-       Scrolling itself is the browser's: overflow-x plus scroll-snap already
-       give trackpad, touch and momentum for free. This only adds the parts
-       CSS has no answer for — the arrows, mouse drag, and marking whichever
-       card sits nearest the centre so it can lift slightly.                */
-    var track = doc.getElementById('usecase-track');
-    if (track) {
-        var cards = track.querySelectorAll('.usecase');
-        var prev  = doc.querySelector('[data-carousel-prev]');
-        var next  = doc.querySelector('[data-carousel-next]');
-        var pending = false, watching = !hasIO;
-
-        var step = function () {
-            /* one card plus one gap, measured live so it survives a resize */
-            if (cards.length < 2) return track.clientWidth;
-            return Math.round(cards[1].getBoundingClientRect().left -
-                              cards[0].getBoundingClientRect().left);
-        };
-
-        /* nearest-to-centre card is the active one; every card also gets a
-           parallax offset proportional to how far off-centre it sits */
-        var paint = function () {
-            pending = false;
-            var mid  = track.scrollLeft + track.clientWidth / 2;
-            var best = 0, bestGap = Infinity;
-
-            for (var i = 0; i < cards.length; i++) {
-                var c   = cards[i];
-                var gap = (c.offsetLeft + c.offsetWidth / 2) - mid;
-                if (Math.abs(gap) < bestGap) { bestGap = Math.abs(gap); best = i; }
-                if (!reduce) {
-                    var img = c.querySelector('.usecase__img');
-                    if (img) {
-                        var p = Math.max(-1, Math.min(1, gap / track.clientWidth));
-                        img.style.setProperty('--par', (p * -14).toFixed(1) + 'px');
-                    }
-                }
-            }
-            for (var j = 0; j < cards.length; j++) cards[j].classList.toggle('is-active', j === best);
-
-            if (prev && next) {
-                /* snapping parks the track a few px short of its true end, so
-                   the forward arrow retires once the last card is fully in
-                   view rather than when scrollLeft maxes out */
-                var edge = track.getBoundingClientRect().right;
-                prev.disabled = track.scrollLeft <= 2;
-                next.disabled = cards[cards.length - 1].getBoundingClientRect().right <= edge + 1;
-            }
-        };
-
-        var schedule = function () {
-            if (watching && !pending) { pending = true; requestAnimationFrame(paint); }
-        };
-
-        track.addEventListener('scroll', schedule, { passive: true });
-        window.addEventListener('resize', schedule, { passive: true });
-
-        var nudge = function (dir) {
-            track.scrollBy({ left: dir * step(), behavior: reduce ? 'auto' : 'smooth' });
-        };
-        if (prev) prev.addEventListener('click', function () { nudge(-1); });
-        if (next) next.addEventListener('click', function () { nudge(1); });
-
-        /* mouse drag. Touch and trackpad are left entirely to the browser —
-           hijacking them is what makes hand-rolled carousels feel wrong. */
-        var down = false, startX = 0, startLeft = 0, moved = 0;
-
-        track.addEventListener('pointerdown', function (ev) {
-            if (ev.pointerType !== 'mouse' || ev.button !== 0) return;
-            down = true; moved = 0;
-            startX = ev.clientX;
-            startLeft = track.scrollLeft;
-            track.classList.add('is-dragging');
-        });
-
-        track.addEventListener('pointermove', function (ev) {
-            if (!down) return;
-            var dx = ev.clientX - startX;
-            if (Math.abs(dx) > moved) moved = Math.abs(dx);
-            track.scrollLeft = startLeft - dx;
-        }, { passive: true });
-
-        var release = function (ev) {
-            if (!down) return;
-            down = false;
-            track.classList.remove('is-dragging');
-            /* a drag that travelled shouldn't also open the card underneath */
-            if (moved > 6 && ev && ev.target) {
-                var link = ev.target.closest ? ev.target.closest('.usecase__link') : null;
-                if (link) {
-                    var swallow = function (e) { e.preventDefault(); link.removeEventListener('click', swallow, true); };
-                    link.addEventListener('click', swallow, true);
-                }
-            }
-        };
-        track.addEventListener('pointerup', release);
-        track.addEventListener('pointercancel', release);
-        track.addEventListener('pointerleave', release);
-
-        /* no measuring while the section is nowhere near the screen */
-        if (hasIO) {
-            new IntersectionObserver(function (entries) {
-                watching = entries[0].isIntersecting;
-                if (watching) schedule();
-            }, { rootMargin: '200px 0px' }).observe(track);
-        }
-        paint();
-    }
-
-
     /* ── 6. the product flies into the trust section, and the act that
        follows it ──────────────────────────────────────────────────────────
        One device, one element, for the whole page — it is never cloned and
@@ -594,7 +484,6 @@
        where both sections restack and the two boxes no longer describe the
        same journey.                                                        */
     var flyShots = doc.querySelectorAll('.reel__shot');
-    var flyTexts = doc.querySelectorAll('.reel__caption, .reel__note');
 
     var flyDevice = doc.querySelector('.showcase__device');
     var flySlot   = doc.querySelector('.showcase__slot');
@@ -614,7 +503,7 @@
     if (flyDevice && flySlot && flyMark && flyStory && flyStage && !reduce) {
         var flyMQ = win.matchMedia('(min-width: 1201px)');
         var flyOn = false, flyQueued = false, flyLive = !hasIO, flyW = 0, flyDown = false,
-            flySettled = false;
+            flySettled = false, flyHome = false;
 
         var flyClamp = function (v) { return v < 0 ? 0 : v > 1 ? 1 : v; };
         /* smoothstep, so a departure and a landing are both unhurried and the
@@ -769,6 +658,16 @@
                 flyWhyAir.classList.add('is-settled');
             }
 
+            /* landed exactly on the mark: hand over to the section's own copy
+               of the device, which can then float and sit between the rings.
+               Handed back the moment the journey starts up again. */
+            var home = !!why && g > .9995;
+            if (home !== flyHome) {
+                flyHome = home;
+                flyDevice.classList.toggle('is-parked', home);
+                if (flyWhyAir) flyWhyAir.classList.toggle('is-home', home);
+            }
+
             /* the caption under the device waits for the landing itself: the
                class flips only in the last breath of the journey, so the text
                can never arrive while the product is still moving */
@@ -816,25 +715,6 @@
                 flyShots[i].style.setProperty('--out',
                     (i + 1 < flyN ? flySliceSoft(p, ws, ws + .58 * wl) : 0).toFixed(4));
             }
-
-            /* The texts hand over inside their picture's travel, not on their
-               own clock: a text goes once the picture that replaces its own is
-               about half way across, and the next arrives as that picture
-               lands. Text j belongs to picture j - 1; text 0 is the caption,
-               which belongs to the device and is only ever taken over from. */
-            var j;
-            for (j = 0; j < flyTexts.length; j++) {
-                if (j) {
-                    ws = flyFrom(j - 1);
-                    wl = flySpan(j - 1);
-                    flyTexts[j].style.setProperty('--in',
-                        flySlice(p, ws + .70 * wl, ws + 1.12 * wl).toFixed(4));
-                }
-                ws = flyFrom(j);
-                wl = flySpan(j);
-                flyTexts[j].style.setProperty('--out',
-                    (j < flyN ? flySlice(p, ws + .44 * wl, ws + .78 * wl) : 0).toFixed(4));
-            }
         };
 
         var flyEnable = function () {
@@ -859,6 +739,9 @@
             flyW = 0;
             flyDown = false;
             flySettled = false;
+            flyHome = false;
+            flyDevice.classList.remove('is-parked');
+            if (flyWhyAir) flyWhyAir.classList.remove('is-home');
 
             var st = flyDevice.style;
             st.removeProperty('--fx');
@@ -875,10 +758,6 @@
             for (n = 0; n < flyShots.length; n++) {
                 flyShots[n].style.removeProperty('--in');
                 flyShots[n].style.removeProperty('--out');
-            }
-            for (n = 0; n < flyTexts.length; n++) {
-                flyTexts[n].style.removeProperty('--in');
-                flyTexts[n].style.removeProperty('--out');
             }
         };
 
@@ -1297,7 +1176,7 @@
         film.addEventListener('loadedmetadata', filmMeta);
         if (film.readyState >= 1) filmMeta();
 
-        /* the whole file, in memory, before the section arrives: a seek into
+        /* the whole file, in memory, as the section approaches: a seek into
            a range that has not downloaded yet is what shows as a freeze. Where
            that is not possible (file://, an old browser, a failed request) the
            element falls back to buffering it itself. */
@@ -1319,8 +1198,13 @@
                 if (filmNear) filmPrime();
             }, filmFallback);
         };
-        if (doc.readyState === 'complete') filmLoad();
-        else win.addEventListener('load', filmLoad);
+        /* below the fold, so it is fetched only once the section is a screen
+           away (the observer below) rather than on page load. Without an
+           observer there is nothing to wait on, so it goes after load. */
+        if (!hasIO) {
+            if (doc.readyState === 'complete') filmLoad();
+            else win.addEventListener('load', filmLoad);
+        }
 
         if (hasIO) {
             new IntersectionObserver(function (entries) {
@@ -1331,7 +1215,7 @@
                     filmPrime();
                     if (!filmLenis) filmStart();
                 }
-            }, { rootMargin: '100% 0px' }).observe(filmBox);
+            }, { rootMargin: '250% 0px' }).observe(filmBox);
         } else {
             filmPrime();
             if (!filmLenis) filmStart();

@@ -8,11 +8,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=why3d-1">
     <!-- smooth scroll. Deferred and ahead of script.js, so the page still
          parses and paints without waiting on it, and script.js finds it. -->
     <script src="https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.min.js" defer></script>
-    <script src="script.js" defer></script>
+    <script src="script.js?v=why3d-1" defer></script>
     <script>
         /* the overlay only exists when JS can take it away again — and the
            hero's film only ever starts hidden where there is a script able
@@ -136,7 +136,7 @@
              layout. Should the file be missing, the class goes with it and
              the vector room below renders exactly as it always did. -->
         <video class="room__video" id="hero-video"
-               src="assets/video/herovideo.mp4"
+               src="assets/video/hero.mp4"
                autoplay muted loop playsinline
                preload="auto" disablepictureinpicture tabindex="-1"
                onerror="this.closest('.room').classList.remove('has-photo','has-video'); this.remove();"></video>
@@ -378,30 +378,13 @@
      ═══════════════════════════════════════════════════════════════════════ -->
 <section class="airdata" id="air-data" aria-label="AQ Air live data">
 
-    <!-- the air itself: three very soft, slow currents and a drift of motes.
-         All of it is gradient and transform work — no blur filters, nothing
-         that would cost a frame while the page is scrolling. -->
+    <!-- the air itself: three very soft, still currents of light. The count
+         and the beam are the only things that move in this band. -->
     <div class="airdata__field" aria-hidden="true">
         <span class="airwave airwave--a"></span>
         <span class="airwave airwave--b"></span>
         <span class="airwave airwave--c"></span>
 
-        <div class="airdata__motes">
-            <span class="mote" style="--x:6%;  --y:74%; --sz:3px;   --o:.34; --dx:26px;  --dy:-92px;  --dur:26s; --delay:-3s"></span>
-            <span class="mote" style="--x:13%; --y:28%; --sz:2px;   --o:.26; --dx:-18px; --dy:-70px;  --dur:31s; --delay:-11s"></span>
-            <span class="mote" style="--x:21%; --y:88%; --sz:2.5px; --o:.3;  --dx:14px;  --dy:-118px; --dur:34s; --delay:-19s"></span>
-            <span class="mote" style="--x:28%; --y:16%; --sz:2px;   --o:.2;  --dx:22px;  --dy:-58px;  --dur:29s; --delay:-6s"></span>
-            <span class="mote" style="--x:35%; --y:66%; --sz:3px;   --o:.36; --dx:-24px; --dy:-84px;  --dur:24s; --delay:-15s"></span>
-            <span class="mote" style="--x:43%; --y:34%; --sz:2px;   --o:.24; --dx:18px;  --dy:-66px;  --dur:33s; --delay:-2s"></span>
-            <span class="mote" style="--x:51%; --y:82%; --sz:2.5px; --o:.32; --dx:-14px; --dy:-104px; --dur:28s; --delay:-22s"></span>
-            <span class="mote" style="--x:58%; --y:22%; --sz:2px;   --o:.22; --dx:26px;  --dy:-62px;  --dur:36s; --delay:-9s"></span>
-            <span class="mote" style="--x:66%; --y:70%; --sz:3px;   --o:.3;  --dx:-20px; --dy:-88px;  --dur:27s; --delay:-17s"></span>
-            <span class="mote" style="--x:73%; --y:38%; --sz:2px;   --o:.26; --dx:16px;  --dy:-74px;  --dur:32s; --delay:-4s"></span>
-            <span class="mote" style="--x:81%; --y:86%; --sz:2.5px; --o:.34; --dx:-22px; --dy:-110px; --dur:25s; --delay:-13s"></span>
-            <span class="mote" style="--x:88%; --y:30%; --sz:2px;   --o:.2;  --dx:20px;  --dy:-56px;  --dur:30s; --delay:-20s"></span>
-            <span class="mote" style="--x:94%; --y:60%; --sz:3px;   --o:.28; --dx:-16px; --dy:-96px;  --dur:35s; --delay:-7s"></span>
-            <span class="mote" style="--x:47%; --y:52%; --sz:2px;   --o:.18; --dx:24px;  --dy:-80px;  --dur:38s; --delay:-26s"></span>
-        </div>
     </div>
 
     <div class="airdata__inner">
@@ -911,6 +894,19 @@
     <div class="whyaq__air" aria-hidden="true">
         <div class="whyaq__bloom whyaq__bloom--a"></div>
         <div class="whyaq__bloom whyaq__bloom--b"></div>
+        <!-- depth: soft ellipses on three planes, each answering the cursor
+             by a different, very small amount -->
+        <div class="wdepth wdepth--far">
+            <span class="wdepth__orb wdepth__orb--1"></span>
+            <span class="wdepth__orb wdepth__orb--2"></span>
+        </div>
+        <div class="wdepth wdepth--mid">
+            <span class="wdepth__orb wdepth__orb--3"></span>
+            <span class="wdepth__orb wdepth__orb--4"></span>
+        </div>
+        <div class="wdepth wdepth--near">
+            <span class="wdepth__orb wdepth__orb--5"></span>
+        </div>
     </div>
 
     <div class="whyaq__inner">
@@ -942,14 +938,10 @@
                 <div class="ofield__deep">
                     <span class="ofield__lume"></span>
                     <span class="ofield__lume ofield__lume--b"></span>
-                    <span class="ofield__grid"></span>
                     <span class="ofield__wave ofield__wave--1"></span>
                     <span class="ofield__wave ofield__wave--2"></span>
-                    <span class="ofield__wave ofield__wave--3"></span>
-                    <span class="ofield__wave ofield__wave--4"></span>
                     <span class="ofield__ring ofield__ring--1"></span>
                     <span class="ofield__ring ofield__ring--2"></span>
-                    <span class="ofield__ring ofield__ring--3"></span>
                 </div>
                 <span class="ofield__glow"></span>
             </div>
@@ -959,29 +951,45 @@
             <svg class="orbit__flow" viewBox="0 0 1200 780" fill="none" aria-hidden="true">
                 <defs>
                     <linearGradient id="wFlowL" x1="1" y1="0" x2="0" y2="0">
-                        <stop offset="0%"   stop-color="#447F98" stop-opacity=".85"/>
-                        <stop offset="52%"  stop-color="#629BB5" stop-opacity=".70"/>
-                        <stop offset="100%" stop-color="#B9D9E1" stop-opacity=".05"/>
+                        <stop offset="0%"   stop-color="#629BB5" stop-opacity=".9"/>
+                        <stop offset="55%"  stop-color="#629BB5" stop-opacity=".6"/>
+                        <stop offset="100%" stop-color="#B9D9E1" stop-opacity=".12"/>
                     </linearGradient>
                     <linearGradient id="wFlowR" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%"   stop-color="#447F98" stop-opacity=".85"/>
-                        <stop offset="52%"  stop-color="#629BB5" stop-opacity=".70"/>
-                        <stop offset="100%" stop-color="#B9D9E1" stop-opacity=".05"/>
+                        <stop offset="0%"   stop-color="#629BB5" stop-opacity=".9"/>
+                        <stop offset="55%"  stop-color="#629BB5" stop-opacity=".6"/>
+                        <stop offset="100%" stop-color="#B9D9E1" stop-opacity=".12"/>
                     </linearGradient>
                 </defs>
 
-                <g class="orbit__rings" stroke="#B9D9E1" fill="none">
-                    <ellipse cx="600" cy="392" rx="182" ry="176" stroke-width="1" opacity=".55"/>
-                    <ellipse cx="600" cy="392" rx="252" ry="242" stroke-width="1" opacity=".32"/>
+                <!-- each line's shadow, a little below it on the air's floor: what
+                     makes the curve read as lifted rather than drawn on -->
+                <g class="oflow-shade" fill="none" stroke-linecap="round" transform="translate(0 12)">
+                    <path class="oflow" data-reveal style="--d:520ms" pathLength="1" d="M520 302C472 244 448 158 384 120"/>
+                    <path class="oflow" data-reveal style="--d:560ms" pathLength="1" d="M492 386C438 380 396 392 334 392"/>
+                    <path class="oflow" data-reveal style="--d:600ms" pathLength="1" d="M523 480C470 546 444 640 399 664"/>
+                    <path class="oflow" data-reveal style="--d:640ms" pathLength="1" d="M680 302C728 244 752 158 816 120"/>
+                    <path class="oflow" data-reveal style="--d:680ms" pathLength="1" d="M708 386C762 380 804 392 866 392"/>
+                    <path class="oflow" data-reveal style="--d:720ms" pathLength="1" d="M677 480C730 546 756 640 801 664"/>
                 </g>
 
-                <g fill="none" stroke-linecap="round" stroke-width="1.6">
-                    <path class="oflow" data-reveal style="--d:380ms" stroke="url(#wFlowL)" pathLength="1" d="M520 302C472 244 448 158 384 120"/>
-                    <path class="oflow" data-reveal style="--d:500ms" stroke="url(#wFlowL)" pathLength="1" d="M492 386C438 380 396 392 334 392"/>
-                    <path class="oflow" data-reveal style="--d:620ms" stroke="url(#wFlowL)" pathLength="1" d="M523 480C470 546 444 640 399 664"/>
-                    <path class="oflow" data-reveal style="--d:740ms" stroke="url(#wFlowR)" pathLength="1" d="M680 302C728 244 752 158 816 120"/>
-                    <path class="oflow" data-reveal style="--d:860ms" stroke="url(#wFlowR)" pathLength="1" d="M708 386C762 380 804 392 866 392"/>
-                    <path class="oflow" data-reveal style="--d:980ms" stroke="url(#wFlowR)" pathLength="1" d="M677 480C730 546 756 640 801 664"/>
+                <g class="oflow-lines" fill="none" stroke-linecap="round" stroke-width="1.4">
+                    <path class="oflow oflow--1" data-reveal style="--d:520ms" stroke="url(#wFlowL)" pathLength="1" d="M520 302C472 244 448 158 384 120"/>
+                    <path class="oflow oflow--2" data-reveal style="--d:560ms" stroke="url(#wFlowL)" pathLength="1" d="M492 386C438 380 396 392 334 392"/>
+                    <path class="oflow oflow--3" data-reveal style="--d:600ms" stroke="url(#wFlowL)" pathLength="1" d="M523 480C470 546 444 640 399 664"/>
+                    <path class="oflow oflow--4" data-reveal style="--d:640ms" stroke="url(#wFlowR)" pathLength="1" d="M680 302C728 244 752 158 816 120"/>
+                    <path class="oflow oflow--5" data-reveal style="--d:680ms" stroke="url(#wFlowR)" pathLength="1" d="M708 386C762 380 804 392 866 392"/>
+                    <path class="oflow oflow--6" data-reveal style="--d:720ms" stroke="url(#wFlowR)" pathLength="1" d="M677 480C730 546 756 640 801 664"/>
+                </g>
+
+                <!-- where each line leaves the shell; lit when its benefit is hovered -->
+                <g class="onodes">
+                    <circle class="onode onode--1" cx="490.5" cy="259.5" r="3.2"/>
+                    <circle class="onode onode--2" cx="464.6" cy="384.3" r="3.2"/>
+                    <circle class="onode onode--3" cx="500.8" cy="511.3" r="3.2"/>
+                    <circle class="onode onode--4" cx="709.5" cy="259.5" r="3.2"/>
+                    <circle class="onode onode--5" cx="735.4" cy="384.3" r="3.2"/>
+                    <circle class="onode onode--6" cx="699.2" cy="511.3" r="3.2"/>
                 </g>
             </svg>
 
@@ -999,8 +1007,57 @@
                  the product, exactly as it was. -->
             <div class="orbit__core">
                 <div class="orbit__halo" data-reveal style="--d:260ms" aria-hidden="true"></div>
+
+                <!-- the floor the device floats over: an Ice grid laid back in
+                     perspective, gone to nothing well before its edges -->
+                <div class="wfloor" aria-hidden="true"></div>
+
+                <!-- the airflow rings, behind the device. One ring is two ellipses:
+                     a faint hairline and a short brighter run travelling round it -->
+                <svg class="wrings wrings--back" viewBox="-500 -325 1000 650" fill="none" aria-hidden="true">
+                    <g class="wring wring--a">
+                        <g transform="rotate(-8) translate(0 18)">
+                            <ellipse class="wring__base" rx="300" ry="60" pathLength="100"/>
+                            <ellipse class="wring__run" rx="300" ry="60" pathLength="100"/>
+                        </g>
+                    </g>
+                    <g class="wring wring--b">
+                        <g transform="rotate(9) translate(0 34)">
+                            <ellipse class="wring__base" rx="330" ry="92" pathLength="100"/>
+                            <ellipse class="wring__run" rx="330" ry="92" pathLength="100"/>
+                        </g>
+                    </g>
+                    <g class="wring wring--c">
+                        <g transform="rotate(-3) translate(0 150)">
+                            <ellipse class="wring__base" rx="245" ry="40" pathLength="100"/>
+                            <ellipse class="wring__run" rx="245" ry="40" pathLength="100"/>
+                        </g>
+                    </g>
+                </svg>
+
+                <!-- air drifting in toward the sensor -->
+                <div class="wmotes" aria-hidden="true">
+                    <span class="wmote" style="--sx:-150cqw;--sy:-60cqw;--t:11s;--dl:0s"></span>
+                    <span class="wmote" style="--sx:140cqw;--sy:-90cqw;--t:13s;--dl:-3s"></span>
+                    <span class="wmote" style="--sx:-120cqw;--sy:70cqw;--t:12s;--dl:-6s"></span>
+                    <span class="wmote" style="--sx:165cqw;--sy:40cqw;--t:14s;--dl:-8s"></span>
+                    <span class="wmote" style="--sx:-60cqw;--sy:-120cqw;--t:15s;--dl:-2s"></span>
+                    <span class="wmote" style="--sx:90cqw;--sy:110cqw;--t:12s;--dl:-10s"></span>
+                    <span class="wmote" style="--sx:-175cqw;--sy:10cqw;--t:16s;--dl:-5s"></span>
+                    <span class="wmote" style="--sx:40cqw;--sy:-140cqw;--t:13s;--dl:-11s"></span>
+                    <span class="wmote" style="--sx:125cqw;--sy:-20cqw;--t:11s;--dl:-7s"></span>
+                    <span class="wmote" style="--sx:-95cqw;--sy:125cqw;--t:14s;--dl:-1s"></span>
+                </div>
+
                 <div class="orbit__mark" id="why-mark" aria-hidden="true"></div>
-            <svg class="device pdevice worb__device" data-reveal style="--d:300ms" viewBox="0 0 530 525" role="img" aria-label="The AQ Air indoor air-quality monitor">
+
+                <!-- the device, in three layers so no two things share one
+                     property: .wdev carries the entrance and the cursor,
+                     .wdev__float the slow float and tilt, the svg its look -->
+                <div class="wdev" data-reveal style="--d:300ms">
+                <div class="wdev__float">
+                <span class="wdev__rim" aria-hidden="true"></span>
+            <svg class="device pdevice worb__device" viewBox="0 0 530 525" role="img" aria-label="The AQ Air indoor air-quality monitor">
                 <defs>
                     <linearGradient id="pShellW" x1=".05" y1="0" x2=".95" y2=".55">
                         <stop offset="0%" stop-color="#FFFFFF"/>
@@ -1159,6 +1216,37 @@
                     </g>
                 </g>
             </svg>
+                </div>
+                </div>
+
+                <!-- the same three rings again, only their near halves: these pass
+                     in front of the device, the full rings above pass behind it -->
+                <svg class="wrings wrings--front" viewBox="-500 -325 1000 650" fill="none" aria-hidden="true">
+                    <defs>
+                        <clipPath id="wrFronta"><rect x="-600" y="0" width="1200" height="400"/></clipPath>
+                        <clipPath id="wrFrontb"><rect x="-600" y="0" width="1200" height="400"/></clipPath>
+                        <clipPath id="wrFrontc"><rect x="-600" y="0" width="1200" height="400"/></clipPath>
+                    </defs>
+                    <g class="wring wring--a">
+                        <g transform="rotate(-8) translate(0 18)">
+                            <ellipse class="wring__base" clip-path="url(#wrFronta)" rx="300" ry="60" pathLength="100"/>
+                            <ellipse class="wring__run" clip-path="url(#wrFronta)" rx="300" ry="60" pathLength="100"/>
+                        </g>
+                    </g>
+                    <g class="wring wring--b">
+                        <g transform="rotate(9) translate(0 34)">
+                            <ellipse class="wring__base" clip-path="url(#wrFrontb)" rx="330" ry="92" pathLength="100"/>
+                            <ellipse class="wring__run" clip-path="url(#wrFrontb)" rx="330" ry="92" pathLength="100"/>
+                        </g>
+                    </g>
+                    <g class="wring wring--c">
+                        <g transform="rotate(-3) translate(0 150)">
+                            <ellipse class="wring__base" clip-path="url(#wrFrontc)" rx="245" ry="40" pathLength="100"/>
+                            <ellipse class="wring__run" clip-path="url(#wrFrontc)" rx="245" ry="40" pathLength="100"/>
+                        </g>
+                    </g>
+                </svg>
+
                 <div class="orbit__cast" data-reveal style="--d:300ms" aria-hidden="true"></div>
             </div>
 
@@ -1167,7 +1255,7 @@
                  mirror them, so the column is an arc rather than an edge. -->
 
             <div class="worb worb--1">
-                <article class="wcard" data-reveal style="--d:420ms">
+                <article class="wcard" data-reveal style="--d:760ms">
                     <div class="wcard__head">
                         <span class="wcard__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M3.5 14.5h3l2-6 3 10 2.5-7 1.6 3h4.9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                         <span class="wcard__no">01</span>
@@ -1178,7 +1266,7 @@
             </div>
 
             <div class="worb worb--2">
-                <article class="wcard" data-reveal style="--d:540ms">
+                <article class="wcard" data-reveal style="--d:860ms">
                     <div class="wcard__head">
                         <span class="wcard__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.2" stroke="currentColor" stroke-width="1.6"/><path d="M12 7.4V12l3 1.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                         <span class="wcard__no">02</span>
@@ -1189,7 +1277,7 @@
             </div>
 
             <div class="worb worb--3">
-                <article class="wcard" data-reveal style="--d:660ms">
+                <article class="wcard" data-reveal style="--d:960ms">
                     <div class="wcard__head">
                         <span class="wcard__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M6.6 10.2a5.4 5.4 0 1 1 10.8 0c0 3.9 1.5 5.2 1.5 5.2H5.1s1.5-1.3 1.5-5.2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M10.2 18.3a2 2 0 0 0 3.6 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
                         <span class="wcard__no">03</span>
@@ -1200,7 +1288,7 @@
             </div>
 
             <div class="worb worb--4">
-                <article class="wcard" data-reveal style="--d:780ms">
+                <article class="wcard" data-reveal style="--d:1060ms">
                     <div class="wcard__head">
                         <span class="wcard__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="7.6" y="2.9" width="8.8" height="18.2" rx="2.4" stroke="currentColor" stroke-width="1.6"/><path d="M10.9 5.6h2.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="12" cy="17.6" r="1.1" fill="currentColor"/></svg></span>
                         <span class="wcard__no">04</span>
@@ -1211,7 +1299,7 @@
             </div>
 
             <div class="worb worb--5">
-                <article class="wcard" data-reveal style="--d:900ms">
+                <article class="wcard" data-reveal style="--d:1160ms">
                     <div class="wcard__head">
                         <span class="wcard__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M3.6 10.6 12 4.2l8.4 6.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.8 12.3v7.4h12.4v-7.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                         <span class="wcard__no">05</span>
@@ -1222,7 +1310,7 @@
             </div>
 
             <div class="worb worb--6">
-                <article class="wcard" data-reveal style="--d:1020ms">
+                <article class="wcard" data-reveal style="--d:1260ms">
                     <div class="wcard__head">
                         <span class="wcard__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8.6" r="3.1" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 19.4c0-3 2.5-4.9 5.5-4.9s5.5 1.9 5.5 4.9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M16.1 6.1a2.9 2.9 0 0 1 0 5.5M17.6 14.9c1.9.5 3.2 2 3.2 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
                         <span class="wcard__no">06</span>
@@ -1482,45 +1570,6 @@
      benefits wear, and the reveal is the page's own [data-reveal] observer.
      ══════════════════════════════════════════════════════════════════════ -->
 <section class="contact" id="contact">
-
-    <!-- the air. Three very soft radial washes, two translucent rings and a
-         pair of flow lines — the same atmosphere every section above carries,
-         at the lowest strength any of them use. -->
-    <div class="contact__air" aria-hidden="true">
-        <span class="contact__bloom contact__bloom--a"></span>
-        <span class="contact__bloom contact__bloom--b"></span>
-        <span class="contact__bloom contact__bloom--c"></span>
-
-        <span class="contact__ring contact__ring--a"></span>
-        <span class="contact__ring contact__ring--b"></span>
-
-        <svg class="contact__flow" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" fill="none">
-            <defs>
-                <linearGradient id="cFlow" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0"   stop-color="#B9D9E1" stop-opacity="0"/>
-                    <stop offset=".45" stop-color="#D6EBF3" stop-opacity=".34"/>
-                    <stop offset="1"   stop-color="#B9D9E1" stop-opacity="0"/>
-                </linearGradient>
-            </defs>
-            <path class="cflow" d="M-120 236C170 168 402 300 690 250s470-176 900-96" stroke="url(#cFlow)" stroke-width="1.2"/>
-            <path class="cflow cflow--2" d="M-120 512C210 452 386 590 706 540s498-152 880-62" stroke="url(#cFlow)" stroke-width="1"/>
-            <path class="cflow cflow--3" d="M-120 744C186 690 430 800 726 742s470-130 860-58" stroke="url(#cFlow)" stroke-width="1"/>
-        </svg>
-
-        <!-- the live-air band's own motes, reused as they are -->
-        <div class="contact__motes">
-            <span class="mote" style="--x:8%;  --y:78%; --sz:2.5px; --o:.28; --dx:22px;  --dy:-96px;  --dur:30s; --delay:-4s"></span>
-            <span class="mote" style="--x:17%; --y:34%; --sz:2px;   --o:.2;  --dx:-16px; --dy:-64px;  --dur:34s; --delay:-13s"></span>
-            <span class="mote" style="--x:26%; --y:86%; --sz:3px;   --o:.26; --dx:18px;  --dy:-112px; --dur:28s; --delay:-21s"></span>
-            <span class="mote" style="--x:34%; --y:52%; --sz:2px;   --o:.18; --dx:24px;  --dy:-72px;  --dur:37s; --delay:-8s"></span>
-            <span class="mote" style="--x:44%; --y:24%; --sz:2.5px; --o:.24; --dx:-20px; --dy:-58px;  --dur:32s; --delay:-16s"></span>
-            <span class="mote" style="--x:56%; --y:80%; --sz:2px;   --o:.22; --dx:16px;  --dy:-102px; --dur:26s; --delay:-2s"></span>
-            <span class="mote" style="--x:64%; --y:42%; --sz:3px;   --o:.28; --dx:-22px; --dy:-80px;  --dur:35s; --delay:-24s"></span>
-            <span class="mote" style="--x:76%; --y:70%; --sz:2px;   --o:.2;  --dx:20px;  --dy:-88px;  --dur:29s; --delay:-11s"></span>
-            <span class="mote" style="--x:86%; --y:30%; --sz:2.5px; --o:.24; --dx:-18px; --dy:-66px;  --dur:33s; --delay:-18s"></span>
-            <span class="mote" style="--x:93%; --y:64%; --sz:2px;   --o:.18; --dx:14px;  --dy:-94px;  --dur:38s; --delay:-6s"></span>
-        </div>
-    </div>
 
     <div class="contact__inner">
 

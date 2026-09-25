@@ -223,7 +223,7 @@ img, picture, video, canvas {
 }
 
 /* --------------------------------------------------------------------------
-   THE ROOM, AS FILM  (assets/video/herovideo.mp4)
+   THE ROOM, AS FILM  (assets/video/hero.mp4)
 
    The same box the photograph had and the same job: fill the hero at every
    aspect without being stretched, and let the layers above it do the rest.
@@ -245,13 +245,9 @@ img, picture, video, canvas {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    /* the film is framed the way the photograph was: the family and the
-       product held right of centre, the left wall kept clear for the
-       headline. At the desktop hero's own shape the file is very nearly an
-       exact fit and this does almost nothing; it earns its keep on a short
-       or a tall window, where cover has a crop to distribute and this is
-       what decides which way it goes. */
-    object-position: 72% 50%;
+    /* centred, so whatever cover has to crop on a short or a tall window is
+       taken evenly from both sides and the middle of the film stays in view */
+    object-position: 50% 50%;
     background: var(--deep-900);
 }
 
@@ -628,8 +624,8 @@ html.js .room__video.is-ready { opacity: 1; }
 }
 
 .nav__links a:hover {
-    color: var(--deep);
-    background: var(--glacier);
+    color: var(--white);
+    background: rgba(214, 235, 243, .10);
 }
 
 .nav__cta {
@@ -826,7 +822,7 @@ html.js .room__video.is-ready { opacity: 1; }
    of the work: the button reads as rising off the section, not glowing. */
 @media (hover: hover) and (pointer: fine) {
     .btn--primary:hover {
-        transform: translateY(-3px) scale(1.015);
+        transform: translateY(-2px);
         background: linear-gradient(135deg, var(--white) 0%, var(--white) 46%, var(--ice) 100%);
         box-shadow:
             inset 0 1px 0 rgba(255, 255, 255, .95),
@@ -838,7 +834,7 @@ html.js .room__video.is-ready { opacity: 1; }
 
     .btn--ghost:hover {
         color: var(--white);
-        transform: translateY(-3px) scale(1.015);
+        transform: translateY(-2px);
         background: rgba(214, 235, 243, .07);
         border-color: rgba(214, 235, 243, .78);
         box-shadow:
@@ -853,7 +849,7 @@ html.js .room__video.is-ready { opacity: 1; }
        than on the way up so the click feels answered rather than animated. */
     .btn--primary:active,
     .btn--ghost:active {
-        transform: translateY(-1px) scale(1.004);
+        transform: translateY(0);
         transition-duration: .12s;
     }
 
@@ -1004,7 +1000,7 @@ html.js .room__video.is-ready { opacity: 1; }
    each other the way a shared period makes them. */
 @keyframes bob {
     0%, 100% { transform: translateY(0)    scale(var(--s)) rotate(var(--r)); }
-    50%      { transform: translateY(-6px) scale(var(--s)) rotate(var(--r)); }
+    50%      { transform: translateY(-4px) scale(var(--s)) rotate(var(--r)); }
 }
 
 .fcard__icon {
@@ -1076,63 +1072,27 @@ html.js .room__video.is-ready { opacity: 1; }
 
 /* depth tiers */
 .is-near { --s: 1.02; z-index: 6; }
-.is-mid  { --s: .94;  z-index: 5; opacity: .97; }
+.is-mid  { --s: .94;  z-index: 5; opacity: .9; }
 
 .is-far {
     --s: .84;
     z-index: 3;
-    opacity: .9;
+    opacity: .76;
     --fcard-sh: 0 6px 24px rgba(22, 50, 79, .12), inset 0 1px 0 rgba(255, 255, 255, .22);
 }
 
 /* placement — orbiting the device, not gridded */
-.fcard--aq  { top: calc(4% + 18px);  left: -9%;  --r: -1.4deg; animation-delay: 0s;    animation-duration: 9s;    }
-.fcard--co2 { top: 20%; right: -8%;  --r: 1.6deg;  animation-delay: -2.1s; animation-duration: 10.4s; }
-.fcard--voc { top: 43%; right: 0%;   --r: -2deg;   animation-delay: -5.6s; animation-duration: 11.7s; }
-.fcard--pm  { top: 54%; left: -13%;  --r: 1.1deg;  animation-delay: -4.2s; animation-duration: 9.8s;  }
-.fcard--gas { top: calc(69% - 30px); right: -6%;  --r: -1deg;   animation-delay: -6.4s; animation-duration: 12.3s; }
-.fcard--temp { top: 29%; left: -4%;  --r: 1.3deg;  animation-delay: -7.8s; animation-duration: 11.1s; }
+.fcard--aq  { top: calc(4% + 18px);  left: -9%;  --r: -1.4deg; animation-delay: 0s;    animation-duration: 13s;   }
+.fcard--co2 { top: 20%; right: -8%;  --r: 1.6deg;  animation-delay: -2.1s; animation-duration: 14.6s; }
+.fcard--voc { top: 43%; right: 0%;   --r: -2deg;   animation-delay: -5.6s; animation-duration: 16.4s; }
+.fcard--pm  { top: 54%; left: -13%;  --r: 1.1deg;  animation-delay: -4.2s; animation-duration: 13.7s; }
+.fcard--gas { top: calc(69% - 30px); right: -6%;  --r: -1deg;   animation-delay: -6.4s; animation-duration: 17.2s; }
+.fcard--temp { top: 29%; left: -4%;  --r: 1.3deg;  animation-delay: -7.8s; animation-duration: 15.5s; }
 
-.insight {
-    position: absolute;
-    z-index: 7;
-    top: 86%;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    gap: .75rem;
-    width: min(390px, 104%);
-    padding: .8rem 1.1rem;
-    border-radius: 16px;
-    background: linear-gradient(150deg, rgba(22, 50, 79, .82) 0%, rgba(16, 38, 64, .66) 100%);
-    border: 1px solid rgba(185, 217, 225, .26);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    box-shadow: 0 24px 48px -24px rgba(6, 20, 34, .95);
-}
 
-.insight__spark {
-    width: 28px;
-    height: 28px;
-    flex: none;
-    display: grid;
-    place-items: center;
-    border-radius: 9px;
-    color: var(--deep);
-    background: linear-gradient(135deg, var(--ice), var(--glacier));
-}
 
-.insight__spark svg { width: 17px; height: 17px; }
 
-.insight__text {
-    margin: 0;
-    font-size: .81rem;
-    line-height: 1.45;
-    color: rgba(214, 235, 243, .84);
-}
 
-.insight__text strong { color: var(--white); font-weight: 600; }
 
 /* focus */
 :where(a, button):focus-visible {
@@ -1327,7 +1287,6 @@ html.js .room__video.is-ready { opacity: 1; }
 .airwave {
     position: absolute;
     border-radius: 50%;
-    animation: airDrift 26s var(--ease) infinite alternate;
 }
 
 .airwave--a {
@@ -1342,8 +1301,6 @@ html.js .room__video.is-ready { opacity: 1; }
     width: 54vw; height: 140%;
     max-width: 760px;
     background: radial-gradient(closest-side, rgba(214, 235, 243, .09) 0%, rgba(68, 127, 152, .06) 44%, rgba(22, 50, 79, 0) 100%);
-    animation-duration: 34s;
-    animation-delay: -12s;
 }
 
 .airwave--c {
@@ -1351,18 +1308,11 @@ html.js .room__video.is-ready { opacity: 1; }
     width: 58vw; height: 132%;
     max-width: 820px;
     background: radial-gradient(closest-side, rgba(68, 127, 152, .12) 0%, rgba(185, 217, 225, .04) 48%, rgba(22, 50, 79, 0) 100%);
-    animation-duration: 30s;
-    animation-delay: -19s;
 }
 
-@keyframes airDrift {
-    from { transform: translate3d(-2.5%, 0, 0) scale(1);    opacity: .8; }
-    to   { transform: translate3d( 2.5%, 0, 0) scale(1.08); opacity: 1;  }
-}
 
 /* the motes. Position comes from the inline custom properties, so the drift
    is one shared keyframe and fourteen cheap compositor layers */
-.airdata__motes { position: absolute; inset: 0; }
 
 .mote {
     position: absolute;
@@ -1862,7 +1812,6 @@ html.js .room__video.is-ready { opacity: 1; }
         rgba(185, 217, 225, .18) 40%,
         rgba(11, 28, 47, 0) 72%);
     filter: blur(10px);
-    animation: halo 11s ease-in-out infinite;
 }
 
 .showcase__flow {
@@ -2011,7 +1960,8 @@ html.js .room__video.is-ready { opacity: 1; }
     padding: .72rem .95rem;
     border-radius: 18px;
     background: transparent;
-    border: var(--pcard-br);
+    /* a step quieter than the AI card: the readings support the device */
+    border: 1px solid rgba(185, 217, 225, .26);
     box-shadow: var(--pcard-sh);
     translate: calc(var(--px, 0) * var(--depth)) calc(var(--py, 0) * var(--depth));
     /* no backdrop-filter here on purpose: the backdrop is a smooth gradient,
@@ -2079,9 +2029,11 @@ html.js .room__video.is-ready { opacity: 1; }
     /* no fill: the band reads through the card and the Glacier hairline is
        what defines it — the same treatment the sensor cards carry */
     color: var(--on-dark);
-    background: transparent;
+    /* the one card with a ground of its own: what the readings mean sits
+       above the readings themselves */
+    background: rgba(22, 50, 79, .24);
     border: var(--pcard-br);
-    box-shadow: var(--pcard-sh);
+    box-shadow: inset 0 1px 0 rgba(214, 235, 243, .16), 0 26px 50px -30px rgba(4, 14, 25, .8);
     translate: calc(var(--px, 0) * var(--depth)) calc(var(--py, 0) * var(--depth));
 }
 
@@ -2457,19 +2409,13 @@ html.js .room__video.is-ready { opacity: 1; }
     .room.has-photo ~ .hero__inner .fcard--gas { top: calc(80% - 30px); right: 5%;  left: auto;  }
     .room.has-photo ~ .hero__inner .fcard--temp { top: 42%; right: 3%; left: auto;  }
 
-    .room.has-photo ~ .hero__inner .insight {
-        top: auto;
-        bottom: 6%;
-        left: 47%;
-        transform: none;
-    }
     .room.has-photo ~ .hero__inner .device,
     .room.has-photo ~ .hero__inner .stage__halo,
     .room.has-photo ~ .hero__inner .stage__surface,
     .room.has-photo ~ .hero__inner .stage__reflection { display: none; }
 }
 
-@media (max-width: 1240px) {
+@media (max-width: 1200px) {
     /* --- the readings, as a grid ------------------------------------------
        On the wide layout these five are placed one by one over the room, at
        depths, and that is what they are drawn for. It does not survive the
@@ -2552,14 +2498,6 @@ html.js .room__video.is-ready { opacity: 1; }
     .hero__stage .fcard--temp { order: 6; }
 
     /* the AI line closes the grid rather than floating over it */
-    .hero__stage .insight {
-        order: 7;
-        grid-column: 1 / -1;
-        position: relative;
-        inset: auto;
-        width: auto;
-        transform: none;
-    }
 }
 
 @media (max-width: 1200px) {
@@ -2591,17 +2529,10 @@ html.js .room__video.is-ready { opacity: 1; }
        scrim the whole of it was about a stop and a half too dark to read. */
     .room.has-photo .room__photo { opacity: .92; object-position: 70% 48%; }
 
-    /* Stacked, cover crops width rather than height, and it crops hard: a
-       16:9 film in a hero two and a half times taller than it is wide keeps
-       barely a third of its frame. Which third is the whole question — in
-       this file the product stands at 77-92% across and the family just left
-       of it, so the window is walked to the right to hold both, exactly as
-       the photograph's own 70% did for its own composition.
-
-       There is no portrait cut of the film to switch to the way there was a
-       portrait cut of the photograph, so this one value does that job, and
-       the tier below carries it further for the narrowest crop of all. */
-    .room.has-video .room__video { object-position: 78% 50%; }
+    /* Stacked, cover crops width rather than height and keeps about a third
+       of the film. The family sits at 50-77% across it, so 70% holds all of
+       them inside the crop at this width and on a wider landscape tablet. */
+    .room.has-video .room__video { object-position: 70% 50%; }
 
     /* The copy stacks above the stage here, so the scrim is a vertical one:
        heavy across the top third, where the headline, the paragraph and the
@@ -2863,12 +2794,9 @@ html.js .room__video.is-ready { opacity: 1; }
 @media (max-width: 640px) {
     :root { --shell: min(1300px, 100% - 1.5rem); }
 
-    /* a 360px-wide hero keeps about a quarter of the film's width, the
-       narrowest window the page ever asks for. At 78% the product's right
-       edge lands on the crop; this holds it inside the frame with the family
-       beside it, and gives up the empty left of the room — which is under
-       the scrim and the headline in any case. */
-    .room.has-video .room__video { object-position: 90% 50%; }
+    /* a phone keeps about a quarter of the film: 68% centres that quarter on
+       the family, faces and all */
+    .room.has-video .room__video { object-position: 68% 50%; }
 
     .nav__bar { padding: .5rem .5rem .5rem .9rem; }
     .brand__name { font-size: 1rem; }
@@ -2892,12 +2820,9 @@ html.js .room__video.is-ready { opacity: 1; }
     .fcard__spark { width: 38px; height: 18px; }
     .meter { display: none; }
 
-    .insight { top: 88%; }
 
     /* the cards are a grid from 1200px down, so there is nothing to place
        here any more — only the sizes the grid carries */
-    .insight { padding: .7rem .85rem; }
-    .insight__text { font-size: .76rem; }
     .device { width: 82%; }
     /* the 3 + 2 grid holds at this width — it is the card that gets smaller,
        below, not the number of them in a row */
@@ -3161,60 +3086,21 @@ html.js .room__video.is-ready { opacity: 1; }
    several. `align-items: start` is what makes "the same place" literal.
    -------------------------------------------------------------------------- */
 
-.reel__under {
-    width: min(100%, var(--dock-w));
-    margin: clamp(1.25rem, 2vw, 1.75rem) auto 0;
-    text-align: center;
-}
 
-.js-reveal .reel__under {
-    display: grid;
-    align-items: start;
-}
 
-.js-reveal .reel__caption,
-.js-reveal .reel__note { grid-area: 1 / 1; }
 
-.reel__caption-title {
-    margin: 0;
-    font-family: var(--font-display);
-    font-size: clamp(1.02rem, 1.25vw, 1.2rem);
-    font-weight: 600;
-    line-height: 1.3;
-    letter-spacing: -.012em;
-    color: var(--on-dark-72);
-}
 
-.reel__caption-line {
-    margin: .5rem 0 0;
-    font-size: clamp(.86rem, .92vw, .95rem);
-    line-height: 1.62;
-    color: var(--on-dark-52);
-}
 
 /* the caption arrives when the product actually lands — the flight adds
    .is-landed to the reel at the end of its journey, and that is what releases
    this. Gated on .js-reveal so a page without the script simply shows it. */
-.js-reveal .reel__caption {
-    opacity: 0;
-    transform: translateY(16px);
-    transition:
-        opacity .9s var(--ease) .12s,
-        transform .9s var(--ease) .12s;
-}
 
-.js-reveal .reel.is-landed .reel__caption {
-    opacity: 1;
-    transform: none;
-}
 
 /* and it leaves on the scroll, as the first picture starts across — the same
    --out every text in the sequence leaves on. The fade-out is carried by the
    two lines rather than the block, so it stays a scrubbed position: the
    block's own transition above belongs to the landing and would otherwise lag
    every frame of the scrub behind the scroll. */
-.js-reveal .reel__caption-title,
-.js-reveal .reel__caption-line { opacity: calc(1 - var(--out, 0)); }
 
 /* --- the photographs' own words ---------------------------------------------
    One per picture, every one of them in the caption's exact place, and they
@@ -3226,31 +3112,9 @@ html.js .room__video.is-ready { opacity: 1; }
    own picture lands, --out as the next picture starts across.
    -------------------------------------------------------------------------- */
 
-.reel__note { margin: clamp(.9rem, 1.5vw, 1.25rem) 0 0; }
 
-.js-reveal .reel__note {
-    margin: 0;
-    opacity: calc(var(--in, 0) * (1 - var(--out, 0)));
-    transform: translateY(calc((1 - var(--in, 0)) * 18px));
-}
 
-.reel__note-title {
-    margin: 0;
-    font-family: var(--font-display);
-    font-size: clamp(1.35rem, 1.9vw, 1.75rem);
-    font-weight: 700;
-    line-height: 1.18;
-    letter-spacing: -.022em;
-    color: var(--white);
-    text-wrap: balance;
-}
 
-.reel__note-line {
-    margin: .6rem 0 0;
-    font-size: clamp(.92rem, 1.02vw, 1.05rem);
-    line-height: 1.66;
-    color: var(--on-dark-72);
-}
 
 /* --- right: the statement, and everything that takes its place -------------- */
 
@@ -3367,7 +3231,7 @@ html.js .room__video.is-ready { opacity: 1; }
            travel be unhurried and still leave the picture standing still for a
            while at the end of it. The script splits the same shares; if a
            picture is added here, add it there too. */
-        --act2: calc(88svh + 5 * 66svh);
+        --act2: calc(88svh + 2 * 66svh);
         height: calc(100svh + var(--act2));
         padding: 0;
     }
@@ -3479,9 +3343,6 @@ html.js .room__video.is-ready { opacity: 1; }
     /* and the words stay glued to it: the device's visual bottom rises by its
        lift plus the height it gives up (its height is its width x 525/530),
        and this is that number */
-    .reel__under {
-        translate: 0 calc(-1 * var(--p2, 0) * (var(--p2-lift) + var(--dock-w) * .99057 * var(--p2-shrink)));
-    }
 
     /* the right column: the statement and every picture in one cell, so a
        picture lands exactly where the words were and every one after it lands
@@ -4053,32 +3914,8 @@ html.js .room__video.is-ready { opacity: 1; }
    no point in the cycle where the grid jumps.
    -------------------------------------------------------------------------- */
 
-.ofield__grid {
-    position: absolute;
-    left: 50%;
-    top: 50.3%;
-    width: 150%;
-    height: 190%;
-    translate: -50% -50%;
-    transform: rotateX(64deg);
-    background-image:
-        repeating-linear-gradient(90deg, rgba(98, 155, 181, .7) 0 1px, rgba(98, 155, 181, 0) 1px 68px),
-        repeating-linear-gradient(0deg,  rgba(98, 155, 181, .7) 0 1px, rgba(98, 155, 181, 0) 1px 68px);
-    -webkit-mask-image: radial-gradient(ellipse 34% 40% at 50% 50%,
-        #000 0%, rgba(0, 0, 0, .7) 46%, rgba(0, 0, 0, 0) 80%);
-            mask-image: radial-gradient(ellipse 34% 40% at 50% 50%,
-        #000 0%, rgba(0, 0, 0, .7) 46%, rgba(0, 0, 0, 0) 80%);
-    opacity: 0;
-    transition: opacity 1.4s var(--ease) 520ms;
-    animation: ofGrid 32s linear infinite;
-}
 
-.whyaq.is-lit .ofield__grid { opacity: 1; }
 
-@keyframes ofGrid {
-    from { transform: rotateX(64deg) translateY(0); }
-    to   { transform: rotateX(64deg) translateY(68px); }
-}
 
 /* --- layer 3: the sensor waves ---------------------------------------------
    Four of them, on the same plane as the orbits, leaving from behind the
@@ -4118,10 +3955,8 @@ html.js .room__video.is-ready { opacity: 1; }
 
 /* four periods with no common factor, started across the cycle, so one is
    always leaving as another arrives and the four never line up */
-.ofield__wave--1 { --dur: 7.4s;  animation-delay:  0s;    }
-.ofield__wave--2 { --dur: 8.9s;  animation-delay: -2.6s;  }
-.ofield__wave--3 { --dur: 10.3s; animation-delay: -5.4s;  }
-.ofield__wave--4 { --dur: 9.1s;  animation-delay: -7.1s;  }
+.ofield__wave--1 { --dur: 11s;   animation-delay:  0s;    }
+.ofield__wave--2 { --dur: 13.4s; animation-delay: -5.5s;  }
 
 /* --- layer 4: the orbit rings ----------------------------------------------
    Three orbital paths around the device, each on its own plane. The tilt is
@@ -4166,7 +4001,6 @@ html.js .room__video.is-ready { opacity: 1; }
 
 .ofield__ring--1 { --w: 30%; --tx: 65deg; --tz:   0deg; --tzz:  10px; --dur: 26s; }
 .ofield__ring--2 { --w: 39%; --tx: 72deg; --tz:  25deg; --tzz: -40px; --dur: 34s; animation-name: ofSpinBack; }
-.ofield__ring--3 { --w: 48%; --tx: 60deg; --tz: -30deg; --tzz: -90px; --dur: 22s; }
 
 /* --- layer 5: the pool behind the product ----------------------------------
    Outside .ofield__deep, so it holds still while everything behind it turns —
@@ -4202,7 +4036,6 @@ html.js .room__video.is-ready { opacity: 1; }
 .whyaq.is-idle .ofield__ring,
 .whyaq.is-idle .ofield__wave,
 .whyaq.is-idle .ofield__lume,
-.whyaq.is-idle .ofield__grid,
 .whyaq.is-idle .ofield__glow { animation-play-state: paused; }
 
 /* --- the stacked layout ----------------------------------------------------
@@ -4247,14 +4080,10 @@ html.js .room__video.is-ready { opacity: 1; }
 @media (max-width: 1200px) {
     .whyaq { --wy: 0; }
     .ofield__deep { transform: none; }
-    .ofield__grid { display: none; }
     .ofield__ring { animation-duration: calc(var(--dur, 28s) * 1.25); }
 }
 
 @media (max-width: 767px) {
-    .ofield__ring--3,
-    .ofield__wave--3,
-    .ofield__wave--4 { display: none; }
 
     .ofield__ring { border-width: 1.5px; animation-duration: calc(var(--dur, 28s) * 1.5); }
     .ofield__wave { animation-duration: calc(var(--dur, 9s) * 1.35); }
@@ -4281,11 +4110,9 @@ html.js .room__video.is-ready { opacity: 1; }
     .ofield__wave { display: none; }
 
     .ofield__lume,
-    .ofield__grid,
     .ofield__glow,
     .ofield__ring { animation: none; }
 
-    .ofield__grid { opacity: .7; }
 }
 
 /* --- reveal ----------------------------------------------------------------
@@ -4452,7 +4279,6 @@ html.js .room__video.is-ready { opacity: 1; }
 }
 
 .js-fly .orbit__mark { display: block; }
-.js-fly .worb__device { display: none; }
 
 .orbit__halo {
     position: absolute;
@@ -4479,9 +4305,12 @@ html.js .room__video.is-ready { opacity: 1; }
 .orbit__core .worb__device {
     position: relative;
     z-index: 2;
+    display: block;
     width: 100%;
     height: auto;
-    filter: drop-shadow(0 26px 34px rgba(22, 50, 79, .20));
+    /* the flying device's own shadow as it lands (--lit 1, at the landing
+       scale), so the handover between the two is invisible */
+    filter: drop-shadow(0 24px 35px rgba(5, 16, 28, .15));
 }
 
 /* --- the device's own shadows, coming into the light ----------------------
@@ -4730,6 +4559,410 @@ html.js .room__video.is-ready { opacity: 1; }
     }
 
     .wcard__line { font-size: .84rem; line-height: 1.6; }
+}
+
+
+/* ==========================================================================
+   WHY AQ AIR — SPATIAL LAYER
+   The same section, given depth: soft planes behind it, an Ice floor under
+   the device, thin airflow rings that pass behind and in front of it, a few
+   motes of air drifting in, and a device that floats very slowly.
+
+   Everything moves on transform and opacity only. The cursor is the --mx/--my
+   the script already eases for the orbit field (desktop mouse only, ±8/±6px);
+   each plane multiplies it by its own depth, so nothing travels more than
+   about 11px and nothing ever rotates with the pointer.
+
+   On desktop the device on the page is the one that flew down from the hero.
+   It paints above this whole section, so once it has landed exactly on
+   #why-mark the script hands over (.is-home) to the local copy below, which
+   is the same vector at the same size — and that copy is free to float, tilt
+   and sit between the rings.
+   ========================================================================== */
+
+/* --- depth planes -------------------------------------------------------- */
+
+.wdepth {
+    position: absolute;
+    inset: 0;
+    translate: calc(var(--mx, 0px) * var(--z)) calc(var(--my, 0px) * var(--z));
+}
+
+.wdepth--far  { --z: .35; }
+.wdepth--mid  { --z: .6; }
+.wdepth--near { --z: .9; }
+
+.wdepth__orb {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgba(214, 235, 243, .55), rgba(214, 235, 243, 0));
+}
+
+/* far: large and pale. mid: smaller, a touch of Glacier. near: one faint
+   ellipse, lightly blurred, close to the viewer */
+.wdepth__orb--1 { left: 8%;  top: 30%; width: 38vw; aspect-ratio: 1.5; }
+.wdepth__orb--2 { right: 6%; top: 44%; width: 34vw; aspect-ratio: 1.4; }
+.wdepth__orb--3 {
+    left: 24%; top: 50%; width: 18vw; aspect-ratio: 1.8;
+    background: radial-gradient(closest-side, rgba(185, 217, 225, .32), rgba(185, 217, 225, 0));
+}
+.wdepth__orb--4 {
+    right: 22%; top: 38%; width: 15vw; aspect-ratio: 1.6;
+    background: radial-gradient(closest-side, rgba(185, 217, 225, .28), rgba(185, 217, 225, 0));
+}
+.wdepth__orb--5 {
+    left: 58%; top: 70%; width: 12vw; aspect-ratio: 2;
+    border: 1px solid rgba(185, 217, 225, .22);
+    background: radial-gradient(closest-side, rgba(255, 255, 255, .35), rgba(255, 255, 255, 0));
+    filter: blur(2px);
+}
+
+/* the older conic orbits stay as a far background layer, quieter than before */
+.ofield__ring { border-width: 1.5px; opacity: .45; }
+
+/* --- the core: a container, so the rings and motes size to the device ---- */
+
+.orbit__core { container-type: inline-size; }
+
+/* --- the floor ------------------------------------------------------------ */
+
+.wfloor {
+    position: absolute;
+    left: 50%;
+    top: 90%;
+    width: 240%;
+    aspect-ratio: 2.1;
+    translate: -50% -50%;
+    transform: perspective(700px) rotateX(74deg);
+    pointer-events: none;
+    background:
+        repeating-linear-gradient(90deg, rgba(98, 155, 181, .30) 0 1px, transparent 1px 32px),
+        repeating-linear-gradient(0deg,  rgba(98, 155, 181, .30) 0 1px, transparent 1px 32px),
+        radial-gradient(closest-side, rgba(214, 235, 243, .9), rgba(214, 235, 243, 0));
+    -webkit-mask-image: radial-gradient(closest-side, #000 0%, rgba(0, 0, 0, .5) 45%, transparent 100%);
+            mask-image: radial-gradient(closest-side, #000 0%, rgba(0, 0, 0, .5) 45%, transparent 100%);
+    opacity: 0;
+    transition: opacity 1.4s var(--ease) 350ms;
+}
+
+.whyaq.is-lit .wfloor { opacity: .42; }
+
+/* --- the airflow rings ---------------------------------------------------- */
+
+.wrings {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 250%;
+    height: auto;
+    translate: -50% -50%;
+    overflow: visible;
+    pointer-events: none;
+    transform: translate3d(calc(var(--mx, 0px) * .8), calc(var(--my, 0px) * .8), 0);
+    /* the far ends of each ring thin out to nothing rather than stopping */
+    -webkit-mask-image: radial-gradient(closest-side, #000 72%, transparent 100%);
+            mask-image: radial-gradient(closest-side, #000 72%, transparent 100%);
+    opacity: 0;
+    transition: opacity 1.8s var(--ease) 520ms;
+}
+
+.wrings--back  { z-index: 0; }
+.wrings--front { z-index: 3; }
+
+.whyaq.is-lit .wrings { opacity: 1; }
+
+.wring__base,
+.wring__run {
+    fill: none;
+    vector-effect: non-scaling-stroke;
+}
+
+.wring__base { stroke: #B9D9E1; stroke-width: 1; stroke-opacity: .55; }
+
+/* a short run of lighter air travelling round the ring, once every 40s or so */
+.wring__run {
+    stroke: #D6EBF3;
+    stroke-width: 1.4;
+    stroke-opacity: .95;
+    stroke-linecap: round;
+    stroke-dasharray: 12 88;
+    animation: wringRun var(--rt, 40s) linear infinite;
+}
+
+.wring--a { --rt: 38s; }
+.wring--b { --rt: 52s; }
+.wring--c { --rt: 46s; }
+.wring--b .wring__run { animation-direction: reverse; }
+.wring--b .wring__base { stroke: #629BB5; stroke-opacity: .28; }
+
+@keyframes wringRun { to { stroke-dashoffset: -100; } }
+
+/* each ring's plane drifts a degree or two, very slowly */
+.wring {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: wringTilt var(--wt, 26s) ease-in-out infinite;
+}
+
+.wring--b { --wt: 32s; animation-delay: -9s; }
+.wring--c { --wt: 29s; animation-delay: -4s; }
+
+@keyframes wringTilt {
+    0%, 100% { transform: rotate(0deg); }
+    50%      { transform: rotate(1.6deg); }
+}
+
+/* --- motes of air ----------------------------------------------------------- */
+
+.wmotes {
+    position: absolute;
+    left: 50%;
+    top: 46%;
+    width: 0;
+    height: 0;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.wmote {
+    position: absolute;
+    left: -2px;
+    top: -2px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: rgba(98, 155, 181, .55);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, .6);
+    opacity: 0;
+    animation: wmote var(--t, 12s) linear var(--dl, 0s) infinite;
+}
+
+@keyframes wmote {
+    0%   { transform: translate3d(var(--sx), var(--sy), 0) scale(1);   opacity: 0; }
+    18%  { opacity: .7; }
+    80%  { opacity: .55; }
+    100% { transform: translate3d(calc(var(--sx) * .22), calc(var(--sy) * .22), 0) scale(.45); opacity: 0; }
+}
+
+.wmotes { opacity: 0; transition: opacity 1.4s var(--ease) 700ms; }
+.whyaq.is-lit .wmotes { opacity: 1; }
+
+/* --- the device -------------------------------------------------------------- */
+
+.wdev {
+    position: relative;
+    z-index: 2;
+    perspective: 900px;
+    translate: calc(var(--mx, 0px) * 1.4) calc(var(--my, 0px) * 1.4);
+}
+
+.wdev__float {
+    position: relative;
+    transform-style: preserve-3d;
+    animation: wfloat 10s ease-in-out infinite;
+}
+
+/* up about 8px and back, with a degree or two of turn: slow enough that it
+   reads as the device being in the air rather than as an animation */
+@keyframes wfloat {
+    0%, 100% { transform: translate3d(0, 0, 0) rotateX(0deg) rotateY(0deg); }
+    50%      { transform: translate3d(0, -8px, 0) rotateX(1.5deg) rotateY(-2.5deg); }
+}
+
+/* Ice rim light: a soft glow just outside the silhouette, from the upper left */
+.wdev__rim {
+    position: absolute;
+    left: 3%;
+    right: 3%;
+    top: 2%;
+    bottom: 9%;
+    border-radius: 16%;
+    pointer-events: none;
+    box-shadow:
+        -6px -6px 22px rgba(214, 235, 243, .95),
+        0 0 34px rgba(214, 235, 243, .7);
+    opacity: .85;
+    transition: opacity .9s var(--ease);
+}
+
+/* the entrance: from .92 up to size, no blur, no travel */
+.js-reveal .whyaq .wdev[data-reveal] {
+    transform: scale(.92);
+    filter: none;
+    transition:
+        opacity 1.2s var(--ease) var(--d, 0ms),
+        transform 1.4s var(--ease) var(--d, 0ms);
+}
+
+.js-reveal .whyaq .wdev[data-reveal].is-in { transform: none; }
+
+/* the shadow on the floor answers the float: smaller and lighter as the
+   device rises, on the same clock */
+.orbit__cast { animation: wcast 10s ease-in-out infinite; }
+
+@keyframes wcast {
+    0%, 100% { scale: 1;   opacity: 1; }
+    50%      { scale: .9;  opacity: .72; }
+}
+
+/* --- desktop: hand over from the flying device ---------------------------
+   Until it lands the local copy holds its place invisibly and does not float
+   (its first frame after the handover is the frame the flight ended on). */
+.js-fly .whyaq .wdev {
+    position: absolute;
+    inset: 0 0 auto 0;
+    visibility: hidden;
+}
+
+.js-fly .whyaq .wdev[data-reveal] { opacity: 1; transform: none; transition: none; }
+.js-fly .whyaq:not(.is-home) .wdev__float,
+.js-fly .whyaq:not(.is-home) .orbit__cast { animation: none; }
+.js-fly .whyaq:not(.is-home) .wdev__rim { opacity: 0; }
+.js-fly .whyaq.is-home .wdev { visibility: visible; }
+/* the cursor offset eases in after the handover instead of jumping to it */
+.js-fly .whyaq .wdev { transition: translate .7s var(--ease); }
+.js-fly .whyaq:not(.is-home) .wdev { translate: 0 0; }
+.showcase__device.is-flying.is-parked { visibility: hidden; }
+
+/* the rings, motes and nodes wait for the product, the same way the six do */
+.js-fly .whyaq:not(.is-settled) .wrings,
+.js-fly .whyaq:not(.is-settled) .wmotes { opacity: 0; }
+
+/* --- the connecting lines ------------------------------------------------- */
+
+.whyaq .orbit__flow .oflow-lines .oflow { stroke-opacity: .75; transition: stroke-dashoffset 1.5s var(--ease) var(--d, 0ms), stroke-opacity .35s var(--ease), stroke-width .35s var(--ease); }
+
+.whyaq .orbit__flow .oflow-shade .oflow { stroke: #16324F; stroke-opacity: .06; stroke-width: 3; }
+
+.onode {
+    fill: #FFFFFF;
+    stroke: #629BB5;
+    stroke-width: 1.2;
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: opacity .8s var(--ease) 500ms, scale .35s var(--ease), fill .35s var(--ease);
+}
+
+.whyaq.is-lit .onode { opacity: .8; }
+.js-fly .whyaq:not(.is-settled) .onode { opacity: 0; }
+
+/* --- the icons: small glass slabs ------------------------------------------ */
+
+.wcard__icon {
+    color: var(--turquoise);
+    background: linear-gradient(150deg, rgba(255, 255, 255, .78) 0%, rgba(214, 235, 243, .5) 100%);
+    border: 1px solid rgba(255, 255, 255, .85);
+    -webkit-backdrop-filter: blur(6px);
+            backdrop-filter: blur(6px);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .95),
+        inset 0 -1px 0 rgba(98, 155, 181, .14),
+        0 0 0 1px rgba(22, 50, 79, .06),
+        0 5px 0 -2px rgba(185, 217, 225, .55),
+        0 12px 20px -12px rgba(22, 50, 79, .32);
+    transition: background .35s var(--ease), box-shadow .35s var(--ease), color .35s var(--ease);
+}
+
+/* --- the six: the least parallax, and a small lift on hover ---------------- */
+
+.worb {
+    transform: translate3d(calc(var(--mx, 0px) * .3), calc(var(--my, 0px) * .3), 0);
+    transition: scale .45s var(--ease);
+}
+
+.worb:hover,
+.worb:focus-within { scale: 1.03; }
+
+.worb:hover .wcard__icon,
+.worb:focus-within .wcard__icon {
+    color: var(--deep);
+    background: linear-gradient(150deg, rgba(255, 255, 255, .95) 0%, rgba(214, 235, 243, .75) 100%);
+    box-shadow:
+        inset 0 1px 0 #FFFFFF,
+        inset 0 -1px 0 rgba(98, 155, 181, .18),
+        0 0 0 1px rgba(98, 155, 181, .22),
+        0 6px 0 -2px rgba(185, 217, 225, .7),
+        0 16px 24px -12px rgba(22, 50, 79, .36);
+}
+
+.orbit:has(.worb--1:hover, .worb--1:focus-within) .oflow--1,
+.orbit:has(.worb--2:hover, .worb--2:focus-within) .oflow--2,
+.orbit:has(.worb--3:hover, .worb--3:focus-within) .oflow--3,
+.orbit:has(.worb--4:hover, .worb--4:focus-within) .oflow--4,
+.orbit:has(.worb--5:hover, .worb--5:focus-within) .oflow--5,
+.orbit:has(.worb--6:hover, .worb--6:focus-within) .oflow--6 { stroke-opacity: 1; stroke-width: 2; }
+
+.orbit:has(.worb--1:hover, .worb--1:focus-within) .onode--1,
+.orbit:has(.worb--2:hover, .worb--2:focus-within) .onode--2,
+.orbit:has(.worb--3:hover, .worb--3:focus-within) .onode--3,
+.orbit:has(.worb--4:hover, .worb--4:focus-within) .onode--4,
+.orbit:has(.worb--5:hover, .worb--5:focus-within) .onode--5,
+.orbit:has(.worb--6:hover, .worb--6:focus-within) .onode--6 { opacity: 1; scale: 1.5; fill: #D6EBF3; }
+
+/* the layers the cursor moves get their own compositor layer, desktop only */
+@media (min-width: 1201px) and (hover: hover) and (pointer: fine) {
+    .wdepth, .wdev { will-change: translate; }
+    .wrings, .worb { will-change: transform; }
+}
+
+/* --- off screen, nothing runs ------------------------------------------------ */
+
+.whyaq.is-idle .wring,
+.whyaq.is-idle .wring__run,
+.whyaq.is-idle .wmote,
+.whyaq.is-idle .wdev__float,
+.whyaq.is-idle .orbit__cast { animation-play-state: paused; }
+
+/* --- tablet and phone: simpler --------------------------------------------
+   The stack is heading, lead, device, six — already the order below 1080.
+   No cursor here (the script only writes it for a desktop mouse), no glass
+   blur on the icons, one ring fewer, half the motes, a smaller floor. */
+
+@media (max-width: 1200px) {
+    .wdepth { translate: none; }
+    .wdepth__orb--5 { filter: none; }
+    .wring--c { display: none; }
+    .wmote:nth-child(n + 6) { display: none; }
+}
+
+@media (max-width: 1080px) {
+    .wfloor { width: 190%; top: 92%; }
+    .wrings { width: 230%; }
+    .wdepth__orb--1 { width: 70vw; top: 22%; }
+    .wdepth__orb--2 { width: 60vw; top: 55%; }
+    .wdepth__orb--3,
+    .wdepth__orb--4 { display: none; }
+}
+
+@media (max-width: 767px) {
+    .wcard__icon { -webkit-backdrop-filter: none; backdrop-filter: none; }
+    .wmote:nth-child(n + 5) { display: none; }
+    .wdepth__orb--5 { display: none; }
+    .wdev__rim { box-shadow: -4px -4px 16px rgba(214, 235, 243, .9); }
+    .wdev__float { animation-duration: 12s; }
+    .orbit__cast { animation-duration: 12s; }
+    .wring__run { animation-duration: calc(var(--rt, 40s) * 1.3); }
+}
+
+@media (hover: none) {
+    .worb:hover { scale: none; }
+}
+
+/* --- motion turned down: depth stays, movement goes -------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+    .wdev__float,
+    .orbit__cast,
+    .wring,
+    .wring__run { animation: none; }
+    .wring__run { display: none; }
+    .wmotes { display: none; }
+    .worb { transition: none; }
+    .js-reveal .whyaq .wdev[data-reveal] { transform: none; opacity: 1; transition: none; }
+    .wrings,
+    .wfloor,
+    .onode { transition: none; }
 }
 
 
@@ -5751,19 +5984,14 @@ html.js .room__video.is-ready { opacity: 1; }
 }
 
 /* --- the photograph ----------------------------------------------------------
-   contact.jpg, the AQ Air on a desk in a blue-lit room, across the whole
+   con.png, the AQ Air on a desk in front of a city window, across the whole
    section: `cover`, so it fills any shape the section takes without being
-   stretched, and anchored right of centre so the product stays in frame as
-   narrow screens crop the sides away.
+   stretched. The device stands at about 70% across and 60% down the frame,
+   so that is where the crop is anchored — a tall box crops the sides and a
+   wide one the top and bottom, and either way the product stays in frame.
 
-   Three layers over it, in one element:
-   · a Deep Air Blue veil, heaviest on the left where the words are and
-     lighter where the product sits, so the type keeps its contrast and the
-     picture reads in the section's own colour rather than its own;
-   · the footer's opening tone over the last 200px, so the join below is the
-     ramp alone, exactly as before.
-   And a mask at the top, so the picture comes in through the second half of
-   the light-to-navy fade instead of cutting across it.
+   Shown as shot: no veil, no fade, no mask and nothing layered over it, so
+   its own colour, brightness and contrast are what reach the screen.
    -------------------------------------------------------------------------- */
 
 .contact::before {
@@ -5772,24 +6000,16 @@ html.js .room__video.is-ready { opacity: 1; }
     inset: 0;
     z-index: -2;
     pointer-events: none;
-    background-image:
-        linear-gradient(180deg, rgba(16, 38, 64, 0) calc(100% - 200px), #102640 100%),
-        linear-gradient(90deg, rgba(22, 50, 79, .66) 0%, rgba(22, 50, 79, .5) 45%, rgba(22, 50, 79, .32) 100%),
-        url("assets/image/contact.jpg");
-    background-size: 100% 100%, 100% 100%, cover;
-    background-position: 0 0, 0 0, 68% center;
-    background-repeat: no-repeat;
-    -webkit-mask-image: linear-gradient(180deg, transparent calc(var(--contact-fade) * .45), #000 var(--contact-fade));
-            mask-image: linear-gradient(180deg, transparent calc(var(--contact-fade) * .45), #000 var(--contact-fade));
+    background: url("assets/image/con.png") 70% 60% / cover no-repeat;
 }
 
-@media (max-width: 767px) {
-    /* a narrow column of type over the whole width: the veil evens out */
+/* tablet and mobile: the section stacks and runs taller than it is wide, so
+   it takes the portrait shot, anchored on the device (about 69% / 59% of the
+   frame) so cover crops around it rather than through it */
+@media (max-width: 1200px) {
     .contact::before {
-        background-image:
-            linear-gradient(180deg, rgba(16, 38, 64, 0) calc(100% - 200px), #102640 100%),
-            linear-gradient(90deg, rgba(22, 50, 79, .6) 0%, rgba(22, 50, 79, .6) 100%),
-            url("assets/image/contact.jpg");
+        background-image: url("assets/image/responsive-contact.png");
+        background-position: 69% 58%;
     }
 }
 
@@ -5799,92 +6019,17 @@ html.js .room__video.is-ready { opacity: 1; }
    hairline — there is no blur filter in this section at all.
    -------------------------------------------------------------------------- */
 
-.contact__air {
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    /* the atmosphere begins where the light ends — and goes out before the
-       footer, so the join below carries only the ramp */
-    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 var(--contact-fade), #000 calc(100% - 200px), transparent 100%);
-            mask-image: linear-gradient(180deg, transparent 0, #000 var(--contact-fade), #000 calc(100% - 200px), transparent 100%);
-}
 
-.contact__bloom {
-    position: absolute;
-    border-radius: 50%;
-    animation: cDrift 32s var(--ease) infinite alternate;
-}
 
-.contact__bloom--a {
-    top: 2%;
-    left: -16%;
-    width: 54vw;
-    height: 54vw;
-    max-width: 780px;
-    max-height: 780px;
-    background: radial-gradient(circle at 50% 50%, rgba(185, 217, 225, .16) 0%, rgba(98, 155, 181, .07) 46%, rgba(22, 50, 79, 0) 72%);
-}
 
-.contact__bloom--b {
-    bottom: -14%;
-    right: -14%;
-    width: 50vw;
-    height: 50vw;
-    max-width: 720px;
-    max-height: 720px;
-    background: radial-gradient(circle at 50% 50%, rgba(214, 235, 243, .13) 0%, rgba(68, 127, 152, .08) 44%, rgba(22, 50, 79, 0) 74%);
-    animation-duration: 40s;
-    animation-delay: -14s;
-}
 
-.contact__bloom--c {
-    top: 34%;
-    left: 42%;
-    width: 40vw;
-    height: 40vw;
-    max-width: 560px;
-    max-height: 560px;
-    background: radial-gradient(circle at 50% 50%, rgba(185, 217, 225, .10) 0%, rgba(22, 50, 79, 0) 68%);
-    animation-duration: 36s;
-    animation-delay: -22s;
-}
 
-@keyframes cDrift {
-    from { transform: translate3d(-2%, 0, 0) scale(1);    opacity: .8; }
-    to   { transform: translate3d( 2%, 0, 0) scale(1.06); opacity: 1;  }
-}
 
 /* two hairline circles, barely there — the device's own rings, at the scale
    of the section rather than of the product */
-.contact__ring {
-    position: absolute;
-    border-radius: 50%;
-    border: 1px solid rgba(185, 217, 225, .10);
-    animation: cRing 24s ease-in-out infinite;
-}
 
-.contact__ring--a {
-    top: 12%;
-    right: 6%;
-    width: clamp(220px, 24vw, 380px);
-    aspect-ratio: 1;
-}
 
-.contact__ring--b {
-    bottom: 6%;
-    left: 4%;
-    width: clamp(160px, 17vw, 270px);
-    aspect-ratio: 1;
-    border-color: rgba(214, 235, 243, .08);
-    animation-duration: 30s;
-    animation-delay: -11s;
-}
 
-@keyframes cRing {
-    0%, 100% { transform: scale(1);    opacity: .8; }
-    50%      { transform: scale(1.05); opacity: .4; }
-}
 
 /* the flow lines, on the ribbon's own keyframe */
 .contact__flow {
@@ -5895,16 +6040,8 @@ html.js .room__video.is-ready { opacity: 1; }
     opacity: .8;
 }
 
-.cflow {
-    fill: none;
-    stroke-dasharray: 320 560;
-    animation: flow 26s linear infinite;
-}
 
-.cflow--2 { animation-duration: 33s; animation-delay: -9s;  opacity: .7; }
-.cflow--3 { animation-duration: 29s; animation-delay: -17s; opacity: .55; }
 
-.contact__motes { position: absolute; inset: 0; }
 
 /* --- the reveal ------------------------------------------------------------
    The product section's transition, to the millisecond, gated on the class
@@ -6068,8 +6205,11 @@ html.js .room__video.is-ready { opacity: 1; }
     font-size: .89rem;
     line-height: 1.6;
     color: var(--on-dark-72);
-    background: rgba(255, 255, 255, .045);
-    border: 1px solid rgba(185, 217, 225, .16);
+    background: rgba(22, 50, 79, .42);
+    border: 1px solid rgba(185, 217, 225, .24);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    backdrop-filter: blur(14px) saturate(140%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12);
 }
 
 .contact__trust-mark {
@@ -6083,18 +6223,19 @@ html.js .room__video.is-ready { opacity: 1; }
 .contact__trust-mark svg { width: 100%; height: 100%; }
 
 /* --- right: the form -------------------------------------------------------
-   A single soft panel, and no backdrop-filter on it: the backdrop here is a
-   smooth gradient, so blurring it changes the pixels by about 1/255 while
-   costing every frame of scroll on the page — the same measurement the
-   sensor cards and the chain's icons are built on. What reads as glass is the
-   translucent fill, the hairline and the inset highlight along the top.
+   Deep Air Blue glass over the photograph: a translucent #16324F fill, a
+   soft backdrop blur so the image stays readable behind the fields, the
+   hairline and the inset highlight along the top. The trust line above
+   wears the same glass, lighter.
    -------------------------------------------------------------------------- */
 
 .contact__panel {
     padding: clamp(1.5rem, 2.6vw, 2.35rem);
     border-radius: 26px;
-    background: linear-gradient(158deg, rgba(255, 255, 255, .10) 0%, rgba(255, 255, 255, .035) 100%);
-    border: 1px solid rgba(185, 217, 225, .20);
+    background: linear-gradient(158deg, rgba(22, 50, 79, .52) 0%, rgba(22, 50, 79, .40) 100%);
+    border: 1px solid rgba(185, 217, 225, .26);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    backdrop-filter: blur(18px) saturate(140%);
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, .18),
         0 34px 64px -34px rgba(4, 14, 25, .9);
@@ -6309,13 +6450,9 @@ html.js .room__video.is-ready { opacity: 1; }
    -------------------------------------------------------------------------- */
 
 @media (prefers-reduced-motion: reduce) {
-    .contact__bloom,
-    .contact__ring,
-    .cflow { animation: none; }
 
     /* the flow lines are drawn as one continuous stroke rather than parked
        mid-dash by an animation that never runs */
-    .cflow { stroke-dasharray: none; }
 }
 
 
@@ -7179,7 +7316,6 @@ body.is-loaded .hero__stage { animation-delay: .1s; }
 
     /* over-constrained otherwise — `top` and `bottom` together were stretching
        the insight to whatever was left of the stage */
-    .insight { bottom: auto; }
 
     /* a tap target, and a line that does not wrap mid-word */
     .nav__toggle { width: 40px; height: 40px; }
@@ -7238,9 +7374,6 @@ body.is-loaded .hero__stage { animation-delay: .1s; }
     .fcard__label { font-size: .55rem; letter-spacing: .1em; }
     .fcard__spark { width: 30px; height: 15px; }
 
-    .insight { padding: .62rem .72rem; gap: .6rem; }
-    .insight__spark { width: 24px; height: 24px; }
-    .insight__text { font-size: .72rem; }
 
     /* the live-air readings, at the width the row is tightest: four columns
        inside a 296px shell, so the gutter and the figure both come down
@@ -7321,8 +7454,7 @@ body.is-loaded .hero__stage { animation-delay: .1s; }
    A flex child with nothing to shrink to */
 .chain__step,
 .scard__body,
-.phone__statusText,
-.insight__text { min-width: 0; }
+.phone__statusText { min-width: 0; }
 
 /* the hero's readings are content-sized boxes over a picture; a long value
    should shorten the card, not push it off the stage */
@@ -7348,10 +7480,6 @@ body.is-loaded .hero__stage { animation-delay: .1s; }
     .room__plant--b,
     .room__plant--c { filter: none; }
 
-    .insight {
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-    }
 }
 
 @media (max-width: 767px) {
@@ -7461,7 +7589,6 @@ body.is-loaded .hero__stage { animation-delay: .1s; }
     .reel__shot-words { opacity: 1; transform: none; }
     .reel__copy { opacity: 1; transform: none; }
     .reel__mark { transform: none; }
-    .reel__under { translate: none; }
 
     /* a looping film is motion too: it goes, and the section falls back to
        the ground gradient it has always had */
@@ -7487,7 +7614,7 @@ body.is-loaded .hero__stage { animation-delay: .1s; }
 }
 
 /* Hero cards: fixed 3 + 3 at tablet, 2 + 2 + 2 on phones (desktop untouched) */
-@media (max-width: 1240px) {
+@media (max-width: 1200px) {
     .hero__stage .stage {
         grid-template-columns: repeat(3, minmax(0, 1fr));
         grid-auto-rows: 1fr;
@@ -7509,28 +7636,27 @@ body.is-loaded .hero__stage { animation-delay: .1s; }
     .hero__stage .fcard { padding: .5rem .6rem; gap: .45rem; }
 }
 
-/* Hero cards: see-through, with a Deep Air Blue tint and a Deep Air Blue
-   edge. The room still reads through all six — the tint is a wash, not a
-   fill — and it is what holds the white type against a bright window. One
-   rule for every size and both hero grounds, so the six are identical on
-   desktop, tablet and phone. No blur behind them and no sheen on top: the
-   surface is the tint and the line around it, nothing else. */
+/* Hero cards: the page's dark glass. A Deep Air Blue wash rather than a
+   fill, an Ice hairline, a one-pixel highlight along the top edge and one
+   long soft shadow — no blur behind them and no sheen on top. One rule for
+   every size, so the six are identical on desktop, tablet and phone. */
 .hero__stage .fcard,
 .hero__stage .fcard:hover,
 .room.has-photo ~ .hero__inner .fcard,
 .room.has-photo ~ .hero__inner .fcard:hover {
-    background: rgba(22, 50, 79, .42) !important;
-    border-color: rgba(22, 50, 79, .62) !important;
+    background: rgba(22, 50, 79, .36) !important;
+    border-color: rgba(214, 235, 243, .20) !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
+    --fcard-sh: inset 0 1px 0 rgba(255, 255, 255, .10), 0 18px 40px -22px rgba(7, 20, 34, .6);
 }
 
-/* the hover keeps the lift it always had, one step deeper */
+/* the hover keeps its small lift and brightens the edge a step */
 @media (hover: hover) and (pointer: fine) {
     .hero__stage .fcard:hover,
     .room.has-photo ~ .hero__inner .fcard:hover {
-        background: rgba(22, 50, 79, .52) !important;
-        border-color: rgba(22, 50, 79, .78) !important;
+        background: rgba(22, 50, 79, .44) !important;
+        border-color: rgba(214, 235, 243, .34) !important;
     }
 }
 
@@ -7996,8 +8122,185 @@ body.wa-away .totop { bottom: var(--fab-edge); }
     .product__bloom,
     .assure__bloom,
     .whyaq__bloom,
-    .contact__bloom,
-    .contact__ring,
     .howto__wash,
     .foot__glow { animation: none; }
+}
+
+
+/* ==========================================================================
+   CONTACT — READABLE OVER THE PHOTOGRAPH
+   The photograph is shown as shot, and it is bright: a pale sky, a lit blue
+   wall, a white desk. So the type is dark, and the only grounds added are
+   local ones — the icon chips, the trust note, the form panel and its fields.
+   Nothing is laid over the picture as a whole.
+
+   The left column's text carries a faint white halo: the lower left of the
+   frame has a navy chair and dark foliage in it, and the halo is what keeps
+   Deep Air Blue legible where it crosses them without touching the picture
+   anywhere else.
+   ========================================================================== */
+
+.contact .contact__intro {
+    --contact-halo: 0 1px 14px rgba(255, 255, 255, .55);
+}
+
+.contact .contact__eyebrow {
+    color: rgba(22, 50, 79, .78);
+    text-shadow: var(--contact-halo);
+}
+
+.contact .contact__title {
+    color: var(--deep);
+    text-shadow: var(--contact-halo);
+}
+
+.contact .contact__lead {
+    color: rgba(16, 38, 64, .9);
+    font-weight: 500;
+    text-shadow: var(--contact-halo);
+}
+
+/* --- the three ways in ------------------------------------------------------ */
+
+.contact .cway { border-top-color: rgba(22, 50, 79, .18); }
+.contact .cway:first-child { border-top: 0; }
+
+.contact .cway__icon {
+    color: var(--deep);
+    background: rgba(255, 255, 255, .22);
+    border: 1px solid rgba(255, 255, 255, .45);
+    -webkit-backdrop-filter: blur(6px);
+            backdrop-filter: blur(6px);
+}
+
+.contact .cway__name {
+    color: var(--deep);
+    text-shadow: var(--contact-halo);
+}
+
+.contact .cway__line {
+    color: rgba(16, 38, 64, .86);
+    font-weight: 500;
+    text-shadow: var(--contact-halo);
+}
+
+.contact .cway__link {
+    color: var(--deep);
+    font-weight: 700;
+    text-shadow: var(--contact-halo);
+}
+
+.contact .cway__link:hover { color: var(--deep-800); }
+
+/* --- the trust note: the one box on the left with its own ground ----------- */
+
+.contact .contact__trust {
+    color: var(--deep);
+    font-weight: 500;
+    background: rgba(255, 255, 255, .26);
+    border: 1px solid rgba(255, 255, 255, .45);
+    -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+    box-shadow: 0 10px 24px -18px rgba(11, 28, 47, .3);
+}
+
+.contact .contact__trust-mark { color: var(--deep); }
+
+/* the three ways in cross the busiest part of the photograph — the sofa, the
+   trees and the dark chairs — so the list gets the same local glass ground
+   the trust note has, and nothing wider than the list itself */
+.contact .contact__ways {
+    padding: clamp(1rem, 1.8vw, 1.35rem) clamp(1rem, 1.8vw, 1.35rem);
+    border-radius: 20px;
+    background: rgba(255, 255, 255, .28);
+    border: 1px solid rgba(255, 255, 255, .45);
+    -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+    box-shadow: 0 10px 24px -18px rgba(11, 28, 47, .3);
+}
+
+/* on a bright ground the Ice focus ring disappears */
+.contact .contact__intro :where(a):focus-visible { outline-color: var(--deep); }
+
+/* --- the form ---------------------------------------------------------------- */
+
+/* barely a card: a whisper of Deep Air Blue and a thin hairline, with the
+   blur down to a breath so the photograph reads clearly through it — the
+   fields keep their own tint, so the text on them stays legible */
+.contact .contact__panel {
+    background: rgba(22, 50, 79, .06);
+    border: 1px solid rgba(214, 235, 243, .30);
+    -webkit-backdrop-filter: blur(2px);
+            backdrop-filter: blur(2px);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .14),
+        0 20px 40px -32px rgba(11, 28, 47, .3);
+}
+
+/* white here: behind the form the photograph is a dark navy wall and a
+   dark desk, where Deep Air Blue would disappear */
+.contact .cfield__label {
+    color: var(--white);
+    font-weight: 600;
+    text-shadow: 0 1px 6px rgba(11, 28, 47, .45);
+}
+
+.contact .cfield__input {
+    color: var(--white);
+    background: rgba(22, 50, 79, .22);
+    border: 1px solid rgba(214, 235, 243, .20);
+}
+
+.contact .cfield__input::placeholder { color: rgba(255, 255, 255, .65); }
+
+.contact .cfield__input:hover { border-color: rgba(214, 235, 243, .34); }
+
+.contact .cfield__input:focus {
+    color: var(--white);
+    background: rgba(22, 50, 79, .30);
+    border-color: rgba(214, 235, 243, .6);
+    box-shadow: 0 0 0 3px rgba(214, 235, 243, .16);
+}
+
+.contact .cfield__input:-webkit-autofill,
+.contact .cfield__input:-webkit-autofill:hover,
+.contact .cfield__input:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--white);
+    -webkit-box-shadow: 0 0 0 100px #2A4966 inset;
+    caret-color: var(--white);
+}
+
+/* --- Send Message ------------------------------------------------------------ */
+
+.contact .cform__send {
+    color: var(--deep);
+    background: var(--ice);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .8),
+        0 10px 24px -14px rgba(11, 28, 47, .55);
+}
+
+.contact .cform__send .btn__arrow { color: var(--deep); }
+
+@media (hover: hover) and (pointer: fine) {
+    .contact .cform__send:hover {
+        transform: translateY(-2px);
+        background: var(--white);
+        box-shadow:
+            inset 0 1px 0 #fff,
+            0 16px 30px -16px rgba(11, 28, 47, .6);
+    }
+
+    .contact .cform__send:hover .btn__arrow { transform: translateX(3px); }
+
+    .contact .cform__send:active {
+        transform: translateY(0);
+        transition-duration: .12s;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .contact .cform__send:hover,
+    .contact .cform__send:active,
+    .contact .cform__send:hover .btn__arrow { transform: none; }
 }
