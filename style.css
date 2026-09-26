@@ -3428,6 +3428,48 @@ html.js .room__video.is-ready { opacity: 1; }
     .reel__shot img { max-height: none; }
 }
 
+/* --- the same line, swiped, wherever the pin cannot run ---------------------
+   The pinned, scroll-driven line below needs the script, motion left on and
+   `overflow: clip`. Without any one of them — a phone with Reduce Motion on,
+   an older Safari, a script that did not load — the story must still be one
+   line and never a column: the statement and the three pictures sit side by
+   side in a native horizontal scroller, one slide per snap, with the next one
+   showing at the edge so the row reads as something to swipe. The finger
+   moves it directly, so it is as smooth as the page's own scroll. */
+@media (max-width: 1200px) {
+    body:not(.js-hstory) .reel__right {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: flex-start;
+        gap: clamp(.9rem, 4vw, 1.5rem);
+        overflow-x: auto;
+        overflow-y: hidden;
+        scroll-snap-type: x mandatory;
+        overscroll-behavior-x: contain;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        touch-action: pan-x pan-y;
+    }
+
+    body:not(.js-hstory) .reel__right::-webkit-scrollbar { display: none; }
+
+    body:not(.js-hstory) .reel__right > .reel__copy,
+    body:not(.js-hstory) .reel__right > .reel__shot {
+        flex: 0 0 min(86%, 520px);
+        min-width: 0;
+        margin: 0;
+        scroll-snap-align: start;
+        scroll-snap-stop: always;
+    }
+
+    body:not(.js-hstory) .reel__right > .reel__shot img {
+        width: 100%;
+        height: auto;
+        max-width: none;
+        max-height: none;
+    }
+}
+
 
 /* --- the trust story, pinned and scrubbed sideways -------------------------
    The wide layout already tells this story horizontally: every picture starts
