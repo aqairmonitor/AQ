@@ -1633,7 +1633,24 @@
         /* the statement is slide 0 and the three pictures are 1..3, so the line
            carries one more than there are photographs */
         var hsN  = hsShots.length + 1;
-        var hsOn = false;
+        var hsOn = false, hsLive = !hasIO;
+
+        /* the statement and the pictures, in line order */
+        var hsSlides = [hsReel.querySelector('.reel__copy')];
+        for (var hi = 0; hi < hsShots.length; hi++) hsSlides.push(hsShots[hi]);
+
+        /* Where the browser has scroll-driven animations the slides are not
+           moved from here at all: the stylesheet ties them to the section's
+           own view timeline, and the compositor moves them on the same frame
+           as the scroll — a touch scroll runs off the main thread, and
+           anything placed from script lands a frame or more behind the
+           finger, which on a phone is the lag. The script is then left with
+           one class for the statement's links. Everywhere else it places
+           the slides itself, each on its own transform: one inherited
+           number on the reel would restyle everything inside it per frame. */
+        var hsCSS = !!(win.CSS && win.CSS.supports &&
+                       win.CSS.supports('animation-timeline', 'view()') &&
+                       win.CSS.supports('animation-range', 'contain 0% contain 100%'));
 
         var hsClamp = function (v) { return v < 0 ? 0 : v > 1 ? 1 : v; };
         /* smootherstep: zero speed *and* zero acceleration at both ends, so a
@@ -1642,8 +1659,10 @@
         var hsEase = function (v) { return v * v * v * (v * (v * 6 - 15) + 10); };
         var hsSlice = function (p, a, b) { return hsEase(hsClamp((p - a) / (b - a))); };
 
+        var hsLastSp = -1;
+
         var hsPaint = function () {
-            if (!hsOn) return;
+            if (!hsOn || !hsLive) return;
 
             var act = hsAir.getBoundingClientRect();
             var run = act.height - hsReel.getBoundingClientRect().height;
@@ -1657,16 +1676,49 @@
                 sp += hsSlice(p, i * seg + seg * .26, i * seg + seg * .74);
             }
 
-            hsReel.style.setProperty('--sp', sp.toFixed(4));
             /* the statement stops being clickable once it is on its way out */
             hsReel.classList.toggle('is-shift', sp > .5);
+
+            if (hsCSS) return;
+            /* resting between two moves, nothing changes: skip the writes */
+            if (sp > hsLastSp - 1e-4 && sp < hsLastSp + 1e-4) return;
+            hsLastSp = sp;
+            for (var s = 0; s < hsSlides.length; s++) {
+                if (hsSlides[s]) hsSlides[s].style.transform =
+                    'translate3d(' + ((s - sp) * 104).toFixed(3) + 'vw,0,0)';
+            }
         };
 
         scrollJobs.push(hsPaint);
 
+        /* Only near the section: nothing is measured while it is far off. And
+           the three photographs are fetched and decoded a screen and a half
+           ahead — they sit in one cell, parked sideways off the screen, so a
+           lazy <img> would otherwise load, or decode, the moment its slide
+           started across, and that first frame is the hitch. */
+        var hsWarm = false;
+        var hsWarmUp = function () {
+            if (hsWarm) return;
+            hsWarm = true;
+            var imgs = hsReel.querySelectorAll('.reel__shot img');
+            for (var m = 0; m < imgs.length; m++) {
+                imgs[m].loading = 'eager';
+                if (imgs[m].decode) imgs[m].decode().catch(function () {});
+            }
+        };
+        if (hasIO) {
+            new IntersectionObserver(function (entries) {
+                hsLive = entries[0].isIntersecting;
+                if (hsLive) { hsWarmUp(); kickJobs(); }
+            }, { rootMargin: '150% 0px' }).observe(hsAir);
+        } else {
+            hsWarmUp();
+        }
+
         var hsEnable = function () {
             if (hsOn) return;
             hsOn = true;
+            hsLastSp = -1;
             body.classList.add('js-hstory');
             /* a frame later: the class above is what gives the section its
                height, and the first paint has to measure the new box */
@@ -1678,7 +1730,9 @@
             hsOn = false;
             body.classList.remove('js-hstory');
             hsReel.classList.remove('is-shift');
-            hsReel.style.removeProperty('--sp');
+            for (var s = 0; s < hsSlides.length; s++) {
+                if (hsSlides[s]) hsSlides[s].style.removeProperty('transform');
+            }
         };
 
         var hsSync = function () {

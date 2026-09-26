@@ -3566,6 +3566,44 @@ html.js .room__video.is-ready { opacity: 1; }
     }
 }
 
+/* --- the same line, run by the scroll itself ------------------------------
+   Where the browser has scroll-driven animations, the line of slides is tied
+   to the section's own view timeline instead of to a number the script
+   writes. The compositor then moves the slides on the same frame as the
+   scroll — on a phone the scroll runs off the main thread, and anything the
+   script places lands a frame or more behind the finger; this cannot.
+
+   `contain` is exactly the pin: 0% as the section's top reaches the top of
+   the screen and the stage sticks, 100% as its foot reaches the bottom and
+   the stage lets go. The stops are the script's own bands — each move runs
+   through the middle 48% of its third of the run, with rests between — and
+   the curve on each move is the smootherstep it uses, as a cubic. The
+   script detects the same support and stops placing the slides itself. */
+@supports (animation-timeline: view()) and (animation-range: contain 0% contain 100%) {
+    @media (max-width: 1200px) {
+        .js-hstory .assure { view-timeline: --trust-line block; }
+
+        .js-hstory .reel__copy,
+        .js-hstory .reel__shot {
+            animation-name: trust-line;
+            animation-timing-function: linear;
+            animation-fill-mode: both;
+            animation-timeline: --trust-line;
+            animation-range: contain 0% contain 100%;
+        }
+    }
+
+    @keyframes trust-line {
+        0%, 8.667%     { transform: translate3d(calc(var(--i, 0) * 104vw), 0, 0);
+                         animation-timing-function: cubic-bezier(.76, 0, .24, 1); }
+        24.667%, 42%   { transform: translate3d(calc((var(--i, 0) - 1) * 104vw), 0, 0);
+                         animation-timing-function: cubic-bezier(.76, 0, .24, 1); }
+        58%, 75.333%   { transform: translate3d(calc((var(--i, 0) - 2) * 104vw), 0, 0);
+                         animation-timing-function: cubic-bezier(.76, 0, .24, 1); }
+        91.333%, 100%  { transform: translate3d(calc((var(--i, 0) - 3) * 104vw), 0, 0); }
+    }
+}
+
 /* --- the stacked story, over the portrait render ---------------------------
    The held stage centres its slide on the screen, which on the wide render is
    empty room. On the portrait render it is the product: centred on a handset,
