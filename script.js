@@ -181,17 +181,47 @@
     var frameHooks = [];
     var scrollGate = null;
 
+    /* Everything that is placed from the scroll position — the device's
+       flight, the pinned stages, the sideways reel, the bar — is one job in
+       this list, and the list runs once per frame at most, only when the
+       scroll has actually moved (or the layout has). With Lenis it runs
+       inside Lenis's own frame, straight after the page has been moved, so
+       every one of them is painted on the same frame as the scroll it
+       describes: a `scroll` event only arrives a frame after Lenis moves the
+       page, and anything painted from it — above all the fixed device —
+       trails the page by a frame and shivers against it. */
+    var scrollJobs  = [];
+    var jobsY       = -1;
+    var jobsDirty   = true;
+    var jobsQueued  = false;
+
+    var runJobs = function () {
+        jobsQueued = false;
+        var y = win.pageYOffset || doc.documentElement.scrollTop;
+        if (y === jobsY && !jobsDirty) return;
+        jobsY = y;
+        jobsDirty = false;
+        for (var j = 0; j < scrollJobs.length; j++) scrollJobs[j]();
+    };
+
+    /* the layout moved under a still scroll: run the jobs on the next frame */
+    var kickJobs = function () {
+        jobsDirty = true;
+        if (!lenis && !jobsQueued) {
+            jobsQueued = true;
+            requestAnimationFrame(runJobs);
+        }
+    };
+
     if (!reduce && typeof window.Lenis === 'function') {
         var lenis = new window.Lenis({
-            /* the weight of the glide. `duration` rather than `lerp` — the two
-               are alternatives and lerp wins where both are set, so it is gone:
-               a fixed, unhurried settle is what the trust section's scrubbed
-               sequence is built on, and it reads as weight rather than lag. */
-            duration: 1.4,
+            /* the weight of the glide: a tenth of the remaining distance per
+               frame, frame-rate independent. It answers the wheel at once and
+               comes to rest in about half a second — smooth without the long
+               tail a fixed 1.4s ease left on every notch, which read as lag. */
+            lerp: 0.1,
             smoothWheel: true,
-            /* a notch of wheel travel moves the page less far, which is what
-               makes a long scrubbed run feel deliberate instead of flicked */
-            wheelMultiplier: 0.75,
+            wheelMultiplier: 0.9,
             touchMultiplier: 1,
             /* a section can ask to hold the wheel for a moment — see 8b */
             virtualScroll: function (d) { return scrollGate ? scrollGate(d) : true; },
@@ -202,10 +232,35 @@
 
         var lenisFrame = function (t) {
             lenis.raf(t);
+            runJobs();
             for (var h = 0; h < frameHooks.length; h++) frameHooks[h](t);
             requestAnimationFrame(lenisFrame);
         };
         requestAnimationFrame(lenisFrame);
+    } else {
+        win.addEventListener('scroll', kickJobs, { passive: true });
+    }
+    win.addEventListener('resize', kickJobs, { passive: true });
+    win.addEventListener('load', kickJobs);
+    /* images and fonts landing change the page's length and every section's
+       place in it; the jobs measure live, they just need telling */
+    if (win.ResizeObserver) new win.ResizeObserver(kickJobs).observe(body);
+
+    /* In-page links. Every placeholder link on the page is `#`, and with the
+       scroll eased the browser's own answer — an instant jump to the top — is
+       the one sudden position change left. Lenis takes the trip instead, on
+       the same glide as the wheel; a real #id goes to that section. */
+    if (lenis) {
+        doc.addEventListener('click', function (e) {
+            if (e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+            var a = e.target.closest && e.target.closest('a[href^="#"]');
+            if (!a) return;
+            var id = a.getAttribute('href');
+            var to = id === '#' || id === '#top' ? 0 : doc.getElementById(id.slice(1));
+            if (to === null) return;
+            e.preventDefault();
+            lenis.scrollTo(to);
+        });
     }
 
     /* ── 0c. the small-screen menu ────────────────────────────────────────
@@ -435,19 +490,15 @@
        actually near the screen — no measuring on every scroll of the page. */
     var device = doc.querySelector('.showcase__device');
     if (device && !reduce) {
-        var queued = false, live = !hasIO;
+        var live = !hasIO;
 
         var settle = function () {
-            queued = false;
             var r = device.getBoundingClientRect();
             var p = (r.top + r.height / 2 - window.innerHeight / 2) / window.innerHeight;
             device.style.setProperty('--drift', (Math.max(-1, Math.min(1, p)) * -16).toFixed(2) + 'px');
         };
-        var onScroll = function () {
-            if (live && !queued) { queued = true; requestAnimationFrame(settle); }
-        };
 
-        window.addEventListener('scroll', onScroll, { passive: true });
+        scrollJobs.push(function () { if (live) settle(); });
 
         if (hasIO) {
             new IntersectionObserver(function (entries) {
@@ -502,8 +553,11 @@
 
     if (flyDevice && flySlot && flyMark && flyStory && flyStage && !reduce) {
         var flyMQ = win.matchMedia('(min-width: 1201px)');
-        var flyOn = false, flyQueued = false, flyLive = !hasIO, flyW = 0, flyDown = false,
+        var flyOn = false, flyLive = !hasIO, flyW = 0, flyDown = false,
             flySettled = false, flyHome = false;
+        /* the parked copy's own float, and the offset it hands back — see act three */
+        var flyWhyFloat = flyWhyAir && flyWhyAir.querySelector('.wdev__float');
+        var flyOffX = 0, flyOffY = 0, flyOffT = 0;
 
         var flyClamp = function (v) { return v < 0 ? 0 : v > 1 ? 1 : v; };
         /* smoothstep, so a departure and a landing are both unhurried and the
@@ -550,7 +604,6 @@
         var flySpan = function (i) { return i ? .68 * flySeg : .55 * flyF0; };
 
         var flyPaint = function () {
-            flyQueued = false;
             if (!flyOn) return;
 
             var vh    = win.innerHeight;
@@ -638,6 +691,40 @@
                 fw += (why.width - fw) * g;
             }
 
+            /* landed exactly on the mark: hand over to the section's own copy
+               of the device, which can then float and sit between the rings.
+               Handed back the moment the journey starts up again — and on the
+               way back the copy is wherever its float and the cursor had taken
+               it, up to ten-odd pixels off the mark. So the flight picks the
+               device up from there and eases that offset out over a moment,
+               rather than snapping it onto the mark as it leaves. */
+            var park = !!why && g > .9995;
+            if (park !== flyHome) {
+                flyOffT = 0;
+                if (!park && flyWhyFloat) {
+                    var fr = flyWhyFloat.getBoundingClientRect();
+                    if (fr.width) {
+                        flyOffX = fr.left + fr.width  / 2 - (why.left + why.width  / 2);
+                        flyOffY = fr.top  + fr.height / 2 - (why.top  + why.height / 2);
+                        flyOffT = win.performance.now();
+                    }
+                }
+                flyHome = park;
+                flyDevice.classList.toggle('is-parked', park);
+                if (flyWhyAir) flyWhyAir.classList.toggle('is-home', park);
+            }
+            if (flyOffT) {
+                var fk = 1 - (win.performance.now() - flyOffT) / 450;
+                if (fk <= 0) {
+                    flyOffT = 0;
+                } else {
+                    fk = flyEase(fk);
+                    fx += flyOffX * fk;
+                    fy += flyOffY * fk;
+                    jobsDirty = true;       /* keep painting until it is gone */
+                }
+            }
+
             var st = flyDevice.style;
             st.setProperty('--fx', fx.toFixed(2) + 'px');
             st.setProperty('--fy', fy.toFixed(2) + 'px');
@@ -656,16 +743,6 @@
             if (flyWhyAir && g > .82 && !flySettled) {
                 flySettled = true;
                 flyWhyAir.classList.add('is-settled');
-            }
-
-            /* landed exactly on the mark: hand over to the section's own copy
-               of the device, which can then float and sit between the rings.
-               Handed back the moment the journey starts up again. */
-            var home = !!why && g > .9995;
-            if (home !== flyHome) {
-                flyHome = home;
-                flyDevice.classList.toggle('is-parked', home);
-                if (flyWhyAir) flyWhyAir.classList.toggle('is-home', home);
             }
 
             /* the caption under the device waits for the landing itself: the
@@ -740,6 +817,7 @@
             flyDown = false;
             flySettled = false;
             flyHome = false;
+            flyOffT = 0;
             flyDevice.classList.remove('is-parked');
             if (flyWhyAir) flyWhyAir.classList.remove('is-home');
 
@@ -761,15 +839,7 @@
             }
         };
 
-        var onFly = function () {
-            if (flyOn && flyLive && !flyQueued) {
-                flyQueued = true;
-                requestAnimationFrame(flyPaint);
-            }
-        };
-
-        win.addEventListener('scroll', onFly, { passive: true });
-        win.addEventListener('resize', onFly, { passive: true });
+        scrollJobs.push(function () { if (flyOn && flyLive) flyPaint(); });
 
         /* nothing is measured while both ends of the journey are off-screen */
         if (hasIO) {
@@ -834,10 +904,9 @@
         /* --- wide: the pin ------------------------------------------------ */
         if (howN && !reduce) {
             var howMQ = win.matchMedia('(min-width: 1201px)');
-            var howOn = false, howQueued = false, howLive = !hasIO;
+            var howOn = false, howLive = !hasIO;
 
             var howPaint = function () {
-                howQueued = false;
                 if (!howOn) return;
 
                 var box = howBox.getBoundingClientRect();
@@ -855,13 +924,6 @@
                     /* it passes the node at the halfway mark — that is when
                        the stage wakes */
                     howSteps[i].classList.toggle('is-live', sp >= .5);
-                }
-            };
-
-            var onHow = function () {
-                if (howOn && howLive && !howQueued) {
-                    howQueued = true;
-                    requestAnimationFrame(howPaint);
                 }
             };
 
@@ -883,8 +945,7 @@
                 howStack();                       /* hand back to the observer */
             };
 
-            win.addEventListener('scroll', onHow, { passive: true });
-            win.addEventListener('resize', onHow, { passive: true });
+            scrollJobs.push(function () { if (howOn && howLive) howPaint(); });
 
             if (hasIO) {
                 var howIO = new IntersectionObserver(function (entries) {
@@ -1498,14 +1559,12 @@
     var toTop = doc.getElementById('to-top');
     if (toTop) {
         var topUp     = false;
-        var topQueued = false;
         /* the bar carries its own state off this same read rather than a
            second listener: one scroll handler, one rAF, two classes */
         var topNav    = doc.querySelector('.nav');
         var navStuck  = false;
 
         var topRead = function () {
-            topQueued = false;
             var y = win.pageYOffset || doc.documentElement.scrollTop;
 
             /* the bar sits over eight different surfaces on the way down, and
@@ -1529,19 +1588,12 @@
             toTop.classList.toggle('is-up', show);
         };
 
-        var onTop = function () {
-            if (topQueued) return;
-            topQueued = true;
-            requestAnimationFrame(topRead);
-        };
-
         toTop.addEventListener('click', function () {
             if (typeof lenis !== 'undefined' && lenis) { lenis.scrollTo(0); return; }
             win.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
         });
 
-        win.addEventListener('scroll', onTop, { passive: true });
-        win.addEventListener('resize', onTop, { passive: true });
+        scrollJobs.push(topRead);
 
         toTop.hidden = false;              /* the script is here: it can appear */
         topRead();
@@ -1581,7 +1633,7 @@
         /* the statement is slide 0 and the three pictures are 1..3, so the line
            carries one more than there are photographs */
         var hsN  = hsShots.length + 1;
-        var hsOn = false, hsQueued = false;
+        var hsOn = false;
 
         var hsClamp = function (v) { return v < 0 ? 0 : v > 1 ? 1 : v; };
         /* smootherstep: zero speed *and* zero acceleration at both ends, so a
@@ -1591,7 +1643,6 @@
         var hsSlice = function (p, a, b) { return hsEase(hsClamp((p - a) / (b - a))); };
 
         var hsPaint = function () {
-            hsQueued = false;
             if (!hsOn) return;
 
             var act = hsAir.getBoundingClientRect();
@@ -1611,28 +1662,20 @@
             hsReel.classList.toggle('is-shift', sp > .5);
         };
 
-        var onHs = function () {
-            if (hsQueued || !hsOn) return;
-            hsQueued = true;
-            requestAnimationFrame(hsPaint);
-        };
+        scrollJobs.push(hsPaint);
 
         var hsEnable = function () {
             if (hsOn) return;
             hsOn = true;
             body.classList.add('js-hstory');
-            win.addEventListener('scroll', onHs, { passive: true });
-            win.addEventListener('resize', onHs, { passive: true });
             /* a frame later: the class above is what gives the section its
                height, and the first paint has to measure the new box */
-            requestAnimationFrame(hsPaint);
+            kickJobs();
         };
 
         var hsDisable = function () {
             if (!hsOn) return;
             hsOn = false;
-            win.removeEventListener('scroll', onHs);
-            win.removeEventListener('resize', onHs);
             body.classList.remove('js-hstory');
             hsReel.classList.remove('is-shift');
             hsReel.style.removeProperty('--sp');
